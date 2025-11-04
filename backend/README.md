@@ -9,7 +9,9 @@ Backend API server for TaskMan - a multiplayer task completion game.
 - ✅ BE-001: Initialize Node.js + Express project
 - ✅ BE-002: Configure TypeScript
 - ✅ BE-003: Setup Prisma with PostgreSQL schema
-- ⏳ BE-004: Setup local PostgreSQL with Docker
+- ✅ BE-004: Setup local PostgreSQL with Docker
+- ✅ BE-005: Implement authentication middleware
+- ⏳ BE-006: Create user registration endpoint
 
 ## Setup
 
