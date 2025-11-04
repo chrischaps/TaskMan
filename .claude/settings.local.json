@@ -10,7 +10,11 @@
       "Bash(git config:*)",
       "Bash(code --install-extension:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(code:*)",
+      "Bash(npm install:*)",
+      "Bash(curl:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []
