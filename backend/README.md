@@ -1,0 +1,73 @@
+# TaskMan Backend
+
+Backend API server for TaskMan - a multiplayer task completion game.
+
+## Current Status
+
+**Phase 1: Foundation - In Progress**
+
+- ✅ BE-001: Initialize Node.js + Express project
+- ⏳ BE-002: Configure TypeScript
+- ⏳ BE-003: Setup Prisma with PostgreSQL schema
+- ⏳ BE-004: Setup local PostgreSQL with Docker
+
+## Setup
+
+```bash
+# Install dependencies
+npm install
+
+# Copy environment variables
+cp .env.example .env
+
+# Start development server
+npm run dev
+
+# Start production server
+npm start
+```
+
+## Available Scripts
+
+- `npm run dev` - Start development server with nodemon (auto-reload)
+- `npm start` - Start production server
+- `npm test` - Run tests (not yet implemented)
+
+## API Endpoints
+
+### Currently Available
+
+- `GET /` - API server status
+- `GET /api/health` - Health check endpoint
+
+### Coming Soon (Phase 1-2)
+
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `GET /api/auth/me` - Get current user
+- `GET /api/tasks` - List available tasks
+- `POST /api/tasks` - Create new task
+- `POST /api/tasks/:id/accept` - Accept a task
+- `POST /api/tasks/:id/submit` - Submit task solution
+
+## Project Structure
+
+```
+backend/
+├── src/
+│   └── server.js          # Main Express application
+├── .env                    # Environment variables (not committed)
+├── .env.example            # Example environment variables
+├── package.json            # Dependencies and scripts
+└── README.md               # This file
+```
+
+## Environment Variables
+
+See `.env.example` for required environment variables.
+
+## Development
+
+Server runs on `http://localhost:3001` by default.
+
+CORS is enabled for frontend development (will run on `http://localhost:5173`).
