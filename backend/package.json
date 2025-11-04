@@ -2,13 +2,21 @@
   "name": "taskman-backend",
   "version": "1.0.0",
   "description": "TaskMan API server - multiplayer task completion game backend",
-  "main": "src/server.js",
+  "main": "dist/server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
+    "start": "node dist/server.js",
+    "dev": "nodemon --exec ts-node src/server.ts",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "clean": "rm -rf dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["taskman", "game", "api", "express"],
+  "keywords": [
+    "taskman",
+    "game",
+    "api",
+    "express"
+  ],
   "author": "Chris Chappelear",
   "license": "ISC",
   "dependencies": {
@@ -17,6 +25,11 @@
     "express": "^5.1.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
+    "@types/node": "^24.10.0",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }
