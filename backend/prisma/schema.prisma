@@ -1,0 +1,165 @@
+// TaskMan Database Schema
+// Based on TDD.md Section 4.2
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// User Model
+// ============================================================================
+model User {
+  id             String @id @default(uuid()) @db.Uuid
+  username       String @unique @db.VarChar(50)
+  email          String @unique @db.VarChar(255)
+  passwordHash   String @map("password_hash")
+  tokenBalance   Int    @default(0) @map("token_balance")
+  level          Int    @default(1)
+  tasksCompleted Int    @default(0) @map("tasks_completed")
+
+  // Progression flags
+  tutorialCompleted Boolean @default(false) @map("tutorial_completed")
+  taskBoardUnlocked Boolean @default(false) @map("task_board_unlocked")
+  compositeUnlocked Boolean @default(false) @map("composite_unlocked")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  createdTasks  Task[]             @relation("TaskCreator")
+  acceptedTasks Task[]             @relation("TaskAcceptor")
+  transactions  TokenTransaction[]
+  submissions   TaskSubmission[]
+
+  @@map("users")
+}
+
+// ============================================================================
+// Task Model
+// ============================================================================
+model Task {
+  id String @id @default(uuid()) @db.Uuid
+
+  // Task metadata
+  type        String  @db.VarChar(50) // "sort_list", "color_match", "arithmetic", "group_separation", "defragmentation"
+  category    String  @db.VarChar(50) // For composite tasks: "data_processing", "visual_organization", etc.
+  title       String  @db.VarChar(255)
+  description String? @db.Text
+
+  // Task data (JSONB for flexibility)
+  data     Json  @db.JsonB // Task-specific data (items to sort, target color, etc.)
+  solution Json? @db.JsonB // Expected solution (for validation)
+
+  // Rewards and difficulty
+  tokenReward   Int  @map("token_reward")
+  difficulty    Int? // 1-5 stars
+  estimatedTime Int? @map("estimated_time") // In seconds
+
+  // Task state
+  status String @default("available") // "available", "in_progress", "completed", "failed"
+
+  // Composite task flag
+  isComposite Boolean @default(false) @map("is_composite")
+  isTutorial  Boolean @default(false) @map("is_tutorial")
+
+  // Relations
+  creatorId String @map("creator_id") @db.Uuid
+  creator   User   @relation("TaskCreator", fields: [creatorId], references: [id])
+
+  acceptedById String? @map("accepted_by_id") @db.Uuid
+  acceptedBy   User?   @relation("TaskAcceptor", fields: [acceptedById], references: [id])
+
+  // Timestamps
+  createdAt   DateTime  @default(now()) @map("created_at")
+  acceptedAt  DateTime? @map("accepted_at")
+  completedAt DateTime? @map("completed_at")
+
+  // Composite task relations
+  parentTasks CompositeSubtask[] @relation("SubTask")
+  subtasks    CompositeSubtask[] @relation("CompositeTask")
+
+  // Submissions
+  submissions TaskSubmission[]
+
+  @@index([status])
+  @@index([creatorId])
+  @@index([acceptedById])
+  @@index([createdAt])
+  @@map("tasks")
+}
+
+// ============================================================================
+// CompositeSubtask Model
+// ============================================================================
+model CompositeSubtask {
+  id String @id @default(uuid()) @db.Uuid
+
+  compositeTaskId String @map("composite_task_id") @db.Uuid
+  compositeTask   Task   @relation("CompositeTask", fields: [compositeTaskId], references: [id], onDelete: Cascade)
+
+  subtaskId String @map("subtask_id") @db.Uuid
+  subtask   Task   @relation("SubTask", fields: [subtaskId], references: [id], onDelete: Cascade)
+
+  order Int // Sequence in the workflow (0-indexed)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([compositeTaskId, subtaskId])
+  @@index([compositeTaskId])
+  @@index([subtaskId])
+  @@map("composite_subtasks")
+}
+
+// ============================================================================
+// TokenTransaction Model
+// ============================================================================
+model TokenTransaction {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
+  amount  Int // Positive for credit, negative for debit
+  balance Int // Balance after this transaction
+  reason  String @db.VarChar(100) // "task_completion", "task_creation", "composite_premium", etc.
+
+  // Optional reference to related task
+  taskId String? @map("task_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("token_transactions")
+}
+
+// ============================================================================
+// TaskSubmission Model
+// ============================================================================
+model TaskSubmission {
+  id String @id @default(uuid()) @db.Uuid
+
+  taskId String @map("task_id") @db.Uuid
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
+  submission Json @db.JsonB // User's submitted solution
+
+  isCorrect Boolean @map("is_correct")
+  feedback  Json?   @db.JsonB // Validation feedback (errors, partial credit, etc.)
+
+  attemptNumber Int @default(1) @map("attempt_number")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([taskId])
+  @@index([userId])
+  @@map("task_submissions")
+}
