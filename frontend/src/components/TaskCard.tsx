@@ -1,19 +1,5 @@
 import { useState } from 'react'
-
-export interface Task {
-  id: string
-  type: string
-  title: string
-  description: string
-  tokenReward: number
-  difficulty: number
-  estimatedTime: number
-  isTutorial: boolean
-  creator: {
-    username: string
-    level: number
-  }
-}
+import { Task } from '../types/task'
 
 interface TaskCardProps {
   task: Task

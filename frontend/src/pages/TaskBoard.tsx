@@ -1,20 +1,9 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import apiClient from '../services/apiClient'
-import TaskCard, { Task } from '../components/TaskCard'
+import TaskCard from '../components/TaskCard'
 import { useUIStore } from '../stores/uiStore'
-
-interface TasksResponse {
-  tasks: Task[]
-  pagination: {
-    page: number
-    limit: number
-    totalCount: number
-    totalPages: number
-    hasNextPage: boolean
-    hasPrevPage: boolean
-  }
-}
+import { Task, TasksResponse } from '../types/task'
 
 export default function TaskBoard() {
   const [filters, setFilters] = useState({
