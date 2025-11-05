@@ -153,8 +153,46 @@ Every task includes:
 - **Creator**: Player who offered the task (or "System" for tutorial tasks)
 - **Difficulty Rating**: Visual indicator (1-5 stars)
 - **Estimated Time**: Approximate completion time
-- **Deadline** (optional): Time limit for completion
+- **Expiration Time**: Automatic time limit after acceptance (see 4.3)
 - **Validation Criteria**: Automated checks for correctness
+
+### 4.3 Task Expiration System
+
+To prevent tasks from being locked indefinitely and maintain a healthy task economy, accepted tasks automatically expire if not completed within a calculated time limit.
+
+**Expiration Formula:**
+```
+expirationTime = estimatedTime × 3 × difficultyMultiplier × taskTypeMultiplier
+Minimum: 2 minutes
+Maximum: 60 minutes
+
+difficultyMultiplier = 1.0 + (difficulty - 1) × 0.2
+taskTypeMultiplier:
+  - sort_list: 1.0x (straightforward)
+  - arithmetic: 1.0x (quick calculation)
+  - color_match: 1.2x (fine-tuning required)
+  - group_separation: 1.3x (categorization thinking)
+  - defragmentation: 1.5x (complex spatial reasoning)
+```
+
+**Behavior:**
+- **On Task Acceptance**: Expiration timer starts immediately
+- **During Task**: Frontend displays countdown timer to create urgency
+- **On Expiration**: Task automatically returns to available pool for other players
+- **On Late Submission**: Submissions after expiration are rejected
+- **Cleanup**: System checks for expired tasks every minute and releases them
+
+**Example Calculations:**
+- Sort List (Difficulty 1, 30s estimated): 1.5 minutes
+- Color Match (Difficulty 3, 45s estimated): 3.8 minutes
+- Defragmentation (Difficulty 5, 300s estimated): 40.5 minutes
+
+**Design Rationale:**
+- Prevents hoarding of high-reward tasks
+- Creates time pressure and excitement
+- Ensures task board remains dynamic
+- Scales fairly with task complexity
+- Penalizes task type complexity, not just difficulty
 
 ---
 

@@ -1259,6 +1259,227 @@ export class CompositeTaskService {
 }
 ```
 
+### 5.5 Task Expiration System
+
+**Purpose**: Automatically release tasks that are accepted but not completed within a calculated time limit to maintain a healthy task economy.
+
+**Expiration Calculation**:
+```typescript
+// backend/src/utils/taskExpiration.ts
+
+const TASK_TYPE_MULTIPLIERS = {
+  sort_list: 1.0,
+  arithmetic: 1.0,
+  color_match: 1.2,
+  group_separation: 1.3,
+  defragmentation: 1.5,
+};
+
+const MIN_EXPIRATION_MS = 2 * 60 * 1000; // 2 minutes
+const MAX_EXPIRATION_MS = 60 * 60 * 1000; // 60 minutes
+
+export function calculateExpirationTime(
+  estimatedTimeSeconds: number,
+  difficulty: number,
+  taskType: string
+): Date {
+  // Base: 3x estimated time
+  const baseTime = estimatedTimeSeconds * 3 * 1000; // convert to ms
+
+  // Difficulty multiplier: 1.0 to 1.8
+  const difficultyMultiplier = 1.0 + (difficulty - 1) * 0.2;
+
+  // Task type multiplier
+  const typeMultiplier = TASK_TYPE_MULTIPLIERS[taskType] || 1.0;
+
+  // Calculate total expiration time
+  let expirationMs = baseTime * difficultyMultiplier * typeMultiplier;
+
+  // Apply min/max caps
+  expirationMs = Math.max(MIN_EXPIRATION_MS, Math.min(MAX_EXPIRATION_MS, expirationMs));
+
+  // Return expiration timestamp
+  return new Date(Date.now() + expirationMs);
+}
+
+export function isTaskExpired(expiresAt: Date | null): boolean {
+  if (!expiresAt) return false;
+  return new Date() > expiresAt;
+}
+```
+
+**Task Acceptance Flow (Updated)**:
+```typescript
+// backend/src/routes/tasks.ts (POST /api/tasks/:id/accept)
+
+import { calculateExpirationTime } from '../utils/taskExpiration';
+
+router.post('/:id/accept', authMiddleware, async (req, res) => {
+  const taskId = req.params.id;
+  const userId = req.user!.userId;
+
+  // Fetch task to calculate expiration
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: { estimatedTimeSeconds: true, difficulty: true, type: true },
+  });
+
+  if (!task) {
+    return res.status(404).json({ message: 'Task not found' });
+  }
+
+  // Calculate expiration time
+  const expiresAt = calculateExpirationTime(
+    task.estimatedTimeSeconds || 60,
+    task.difficulty || 1,
+    task.type
+  );
+
+  // Atomic task acceptance with expiration
+  const result = await prisma.task.updateMany({
+    where: {
+      id: taskId,
+      status: 'available',
+      creatorId: { not: userId },
+    },
+    data: {
+      status: 'in_progress',
+      acceptedById: userId,
+      acceptedAt: new Date(),
+      expiresAt, // Set expiration timestamp
+    },
+  });
+
+  // ... rest of acceptance logic
+});
+```
+
+**Task Submission Validation (Updated)**:
+```typescript
+// backend/src/routes/tasks.ts (POST /api/tasks/:id/submit)
+
+import { isTaskExpired } from '../utils/taskExpiration';
+
+router.post('/:id/submit', authMiddleware, async (req, res) => {
+  const task = await prisma.task.findUnique({
+    where: { id: req.params.id },
+    select: { /* ... */, expiresAt: true },
+  });
+
+  // Check if task has expired
+  if (isTaskExpired(task.expiresAt)) {
+    return res.status(410).json({
+      message: 'Task has expired. It has been returned to the available pool.',
+      code: 'TASK_EXPIRED',
+    });
+  }
+
+  // ... continue with normal validation
+});
+```
+
+**Expiration Cleanup Service**:
+```typescript
+// backend/src/services/taskExpirationService.ts
+
+export class TaskExpirationService {
+  /**
+   * Release expired tasks back to available pool
+   * Should be called periodically (e.g., every 1 minute via cron)
+   */
+  static async releaseExpiredTasks(): Promise<number> {
+    const now = new Date();
+
+    const result = await prisma.task.updateMany({
+      where: {
+        status: 'in_progress',
+        expiresAt: {
+          not: null,
+          lt: now, // Expired tasks
+        },
+      },
+      data: {
+        status: 'available',
+        acceptedById: null,
+        acceptedAt: null,
+        expiresAt: null,
+      },
+    });
+
+    if (result.count > 0) {
+      console.log(`Released ${result.count} expired tasks`);
+    }
+
+    return result.count;
+  }
+
+  /**
+   * Start periodic cleanup (runs every 60 seconds)
+   */
+  static startPeriodicCleanup(): NodeJS.Timeout {
+    console.log('Task expiration cleanup service started');
+
+    // Run immediately on startup
+    this.releaseExpiredTasks();
+
+    // Then run every minute
+    return setInterval(() => {
+      this.releaseExpiredTasks().catch(console.error);
+    }, 60 * 1000);
+  }
+}
+```
+
+**Integration in Server**:
+```typescript
+// backend/src/server.ts
+
+import { TaskExpirationService } from './services/taskExpirationService';
+
+// ... Express setup
+
+// Start expiration cleanup service
+TaskExpirationService.startPeriodicCleanup();
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+```
+
+**Frontend Timer Display**:
+```typescript
+// frontend/src/hooks/useTaskTimer.ts
+
+export function useTaskTimer(expiresAt: string | Date) {
+  const [timeRemaining, setTimeRemaining] = useState<number>(0);
+
+  useEffect(() => {
+    const calculateTimeRemaining = () => {
+      const now = Date.now();
+      const expiration = new Date(expiresAt).getTime();
+      const remaining = Math.max(0, expiration - now);
+      setTimeRemaining(remaining);
+    };
+
+    calculateTimeRemaining();
+    const interval = setInterval(calculateTimeRemaining, 1000);
+
+    return () => clearInterval(interval);
+  }, [expiresAt]);
+
+  const minutes = Math.floor(timeRemaining / 60000);
+  const seconds = Math.floor((timeRemaining % 60000) / 1000);
+
+  return {
+    timeRemaining,
+    minutes,
+    seconds,
+    isExpired: timeRemaining === 0,
+    formatted: `${minutes}:${seconds.toString().padStart(2, '0')}`,
+  };
+}
+```
+
 ---
 
 ## 6. Security & Performance

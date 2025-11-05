@@ -78,6 +78,7 @@ model Task {
   createdAt   DateTime  @default(now()) @map("created_at")
   acceptedAt  DateTime? @map("accepted_at")
   completedAt DateTime? @map("completed_at")
+  expiresAt   DateTime? @map("expires_at")
 
   // Composite task relations
   parentTasks CompositeSubtask[] @relation("SubTask")

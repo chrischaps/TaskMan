@@ -5,6 +5,7 @@ import prisma from './lib/prisma';
 import authRoutes from './routes/auth';
 import taskRoutes from './routes/tasks';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { TaskExpirationService } from './services/taskExpirationService';
 
 dotenv.config();
 
@@ -63,6 +64,9 @@ app.listen(PORT, () => {
   console.log(`🚀 TaskMan API server running on http://localhost:${PORT}`);
   console.log(`📊 Health check available at http://localhost:${PORT}/api/health`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+
+  // Start task expiration cleanup service
+  TaskExpirationService.startPeriodicCleanup();
 });
 
 export default app;

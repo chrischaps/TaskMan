@@ -13,6 +13,7 @@ export interface Task {
   status?: string
   isTutorial: boolean
   acceptedAt?: string
+  expiresAt?: string
   creator: {
     id?: string
     username: string

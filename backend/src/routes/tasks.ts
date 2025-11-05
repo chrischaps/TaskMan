@@ -8,6 +8,7 @@ import { authMiddleware } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
 import { validateTask } from '../validators/taskValidators';
 import { TokenService } from '../services/tokenService';
+import { calculateExpirationTime, isTaskExpired } from '../utils/taskExpiration';
 
 const router = Router();
 
@@ -207,6 +208,32 @@ router.post(
       return;
     }
 
+    // Fetch task to calculate expiration time
+    const taskForExpiration = await prisma.task.findUnique({
+      where: { id: taskId },
+      select: {
+        estimatedTime: true,
+        difficulty: true,
+        type: true,
+        status: true,
+        creatorId: true,
+      },
+    });
+
+    if (!taskForExpiration) {
+      res.status(404).json({
+        message: 'Task not found',
+      });
+      return;
+    }
+
+    // Calculate expiration time
+    const expiresAt = calculateExpirationTime(
+      taskForExpiration.estimatedTime || 60,
+      taskForExpiration.difficulty || 1,
+      taskForExpiration.type
+    );
+
     // Atomic task acceptance with race condition prevention
     // Using Prisma's updateMany with WHERE conditions to ensure atomicity
     const result = await prisma.task.updateMany({
@@ -221,6 +248,7 @@ router.post(
         status: 'in_progress',
         acceptedById: userId,
         acceptedAt: new Date(),
+        expiresAt, // Set calculated expiration time
       },
     });
 
@@ -279,6 +307,7 @@ router.post(
         estimatedTime: true,
         status: true,
         acceptedAt: true,
+        expiresAt: true,
         creator: {
           select: {
             id: true,
@@ -328,6 +357,7 @@ router.post(
         status: true,
         acceptedById: true,
         creatorId: true,
+        expiresAt: true,
       },
     });
 
@@ -351,6 +381,15 @@ router.post(
     if (task.acceptedById !== userId) {
       res.status(403).json({
         message: 'You have not accepted this task',
+      });
+      return;
+    }
+
+    // Check if task has expired
+    if (isTaskExpired(task.expiresAt)) {
+      res.status(410).json({
+        message: 'Task has expired. It has been returned to the available pool.',
+        code: 'TASK_EXPIRED',
       });
       return;
     }

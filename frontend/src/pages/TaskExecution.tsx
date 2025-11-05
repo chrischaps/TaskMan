@@ -5,6 +5,7 @@ import apiClient from '../services/apiClient'
 import TaskExecutor from '../components/TaskExecutor'
 import { useUIStore } from '../stores/uiStore'
 import { useUserStore } from '../stores/userStore'
+import { useTaskTimer } from '../hooks/useTaskTimer'
 import type { Task } from '../types/task'
 
 export default function TaskExecution() {
@@ -132,6 +133,20 @@ export default function TaskExecution() {
   }
 
   const task = acceptMutation.data.task
+  const timer = useTaskTimer(task.expiresAt)
+
+  // Handle expiration
+  useEffect(() => {
+    if (timer.isExpired && task.expiresAt) {
+      addNotification({
+        type: 'error',
+        message: 'Task has expired! Returning to task board...',
+      })
+      setTimeout(() => {
+        navigate('/tasks')
+      }, 2000)
+    }
+  }, [timer.isExpired, task.expiresAt, navigate, addNotification])
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -139,13 +154,29 @@ export default function TaskExecution() {
         {/* Header */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <div className="flex items-start justify-between mb-4">
-            <div>
+            <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{task.title}</h1>
               <p className="text-gray-600">{task.description}</p>
             </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold text-green-600">{task.tokenReward}</div>
-              <div className="text-sm text-gray-500">tokens</div>
+            <div className="text-right flex flex-col gap-2">
+              <div>
+                <div className="text-3xl font-bold text-green-600">{task.tokenReward}</div>
+                <div className="text-sm text-gray-500">tokens</div>
+              </div>
+              {task.expiresAt && (
+                <div
+                  className={`px-3 py-2 rounded-lg font-semibold ${
+                    timer.isExpired
+                      ? 'bg-red-100 text-red-800'
+                      : timer.isLowTime
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-blue-100 text-blue-800'
+                  }`}
+                >
+                  <div className="text-xs uppercase tracking-wide mb-1">Time Remaining</div>
+                  <div className="text-2xl font-mono">{timer.formatted}</div>
+                </div>
+              )}
             </div>
           </div>
 
