@@ -147,7 +147,7 @@ async function main() {
 
     for (let i = 0; i < tasksPerType; i++) {
       // Generate tasks with varying difficulties (1, 2, 3)
-      const difficulty = (i % 3) + 1;
+      const difficulty = ((i % 3) + 1) as 1 | 2 | 3;
       const task = generateTaskByType(taskType, { difficulty, isTutorial: false });
 
       const createdTask = await prisma.task.create({
