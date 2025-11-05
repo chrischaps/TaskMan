@@ -13,7 +13,7 @@ Backend API server for TaskMan - a multiplayer task completion game.
 - ✅ BE-005: Implement authentication middleware
 - ✅ BE-006: Create user registration endpoint
 - ✅ BE-007: Create user login endpoint
-- ⏳ BE-008: Create GET /api/auth/me endpoint
+- ✅ BE-008: Create GET /api/auth/me endpoint
 
 ## Setup
 
@@ -49,12 +49,11 @@ npm start
 
 - `GET /` - API server status
 - `GET /api/health` - Health check endpoint
-
-### Coming Soon (Phase 1-2)
-
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
-- `GET /api/auth/me` - Get current user
+- `GET /api/auth/me` - Get current user (protected)
+
+### Coming Soon (Phase 1-2)
 - `GET /api/tasks` - List available tasks
 - `POST /api/tasks` - Create new task
 - `POST /api/tasks/:id/accept` - Accept a task

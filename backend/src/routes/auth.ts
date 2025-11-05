@@ -3,6 +3,7 @@ import { z } from 'zod';
 import prisma from '../lib/prisma';
 import { hashPassword, comparePassword } from '../utils/hash';
 import { generateToken } from '../utils/jwt';
+import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
 
@@ -196,6 +197,59 @@ router.post('/login', async (req: Request, res: Response) => {
     res.status(500).json({
       error: 'Internal Server Error',
       message: 'An error occurred during login',
+    });
+  }
+});
+
+/**
+ * GET /api/auth/me
+ * Get current user profile (requires authentication)
+ */
+router.get('/me', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    // User is attached to request by authMiddleware
+    if (!req.user) {
+      res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Authentication required',
+      });
+      return;
+    }
+
+    // Fetch fresh user data from database
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+    });
+
+    if (!user) {
+      res.status(404).json({
+        error: 'Not Found',
+        message: 'User not found',
+      });
+      return;
+    }
+
+    // Return user data
+    res.status(200).json({
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        tokenBalance: user.tokenBalance,
+        level: user.level,
+        tasksCompleted: user.tasksCompleted,
+        tutorialCompleted: user.tutorialCompleted,
+        taskBoardUnlocked: user.taskBoardUnlocked,
+        compositeUnlocked: user.compositeUnlocked,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
+    });
+  } catch (error) {
+    console.error('Get user error:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'An error occurred while fetching user data',
     });
   }
 });
