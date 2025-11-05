@@ -26,7 +26,7 @@ export default function ColorMatchTask({ task, onSubmit, isSubmitting }: ColorMa
 
   const handleSubmit = () => {
     onSubmit({
-      color: { r, g, b },
+      submittedColor: { r, g, b },
     })
   }
 
