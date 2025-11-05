@@ -10,7 +10,7 @@ This is a **prototype** focused on validating core gameplay mechanics and the to
 
 ## Repository Status
 
-**Current State:** Phase 2 Task UIs - PARTIALLY COMPLETE (All 5 Task Type UIs Done ✅)
+**Current State:** Phase 2 Core Task System - COMPLETE ✅ (19/19 tasks)
 
 ### Completed Work
 
@@ -18,6 +18,7 @@ This is a **prototype** focused on validating core gameplay mechanics and the to
 - **BRAINSTORM.md** - Original game concept
 - **GDD.md** - Complete Game Design Document
 - **TDD.md** - Technical Design Document (architecture, API specs, database schema)
+- **DEFRAG_TASK_DESIGN.md** - Detailed defragmentation mechanic guide
 - **DEPLOYMENT_COSTS.md** - Cost analysis for GCP, Vercel, and Render
 - **IMPLEMENTATION_PLAN.md** - 67 tasks broken down for 9-12 week implementation
 
@@ -33,6 +34,19 @@ This is a **prototype** focused on validating core gameplay mechanics and the to
 - ✅ BE-009: Token transaction service with atomic operations
 - ✅ BE-010: Global error handling middleware
 
+**Backend Implementation (Phase 2 - Core Task System - COMPLETE 11/11 tasks):**
+- ✅ BE-011: Sort List validator
+- ✅ BE-012: Color Match validator (10%/7%/5% tolerance)
+- ✅ BE-013: Arithmetic validator
+- ✅ BE-014: Group Separation validator
+- ✅ BE-015: Defragmentation validator (contiguous color grouping)
+- ✅ BE-016: Generic validation function router
+- ✅ BE-017: Task generation service (all 5 types with difficulty scaling)
+- ✅ BE-018: Tutorial task seeding (5 tasks, one per type)
+- ✅ BE-019: GET /api/tasks endpoint (with filters)
+- ✅ BE-020: POST /api/tasks/:id/accept endpoint (atomic with race condition protection)
+- ✅ BE-021: POST /api/tasks/:id/submit endpoint (validates and awards tokens)
+
 **Frontend Implementation (Phase 1 - COMPLETE 6/6 tasks):**
 - ✅ FE-001: React + Vite + TypeScript project initialized
 - ✅ FE-002: Tailwind CSS v3 configured
@@ -41,12 +55,15 @@ This is a **prototype** focused on validating core gameplay mechanics and the to
 - ✅ FE-005: Axios API client with JWT interceptors
 - ✅ FE-006: Authentication UI (Login, Register, Dashboard pages)
 
-**Frontend Implementation (Phase 2 - Task UIs - COMPLETE 5/5 tasks):**
+**Frontend Implementation (Phase 2 - Core Task System - COMPLETE 8/8 tasks):**
+- ✅ FE-007: Task board page layout with filters
+- ✅ FE-008: Task board polling with TanStack Query (30s intervals)
 - ✅ FE-009: Sort List task UI with drag-and-drop (dnd-kit)
 - ✅ FE-010: Color Match task UI with RGB sliders
 - ✅ FE-011: Arithmetic task UI with number input
 - ✅ FE-012: Group Separation task UI with drag-to-buckets
 - ✅ FE-013: Defragmentation task UI with click-to-swap (contiguous color grouping mechanic)
+- ✅ FE-014: Task execution flow (Accept → Execute → Submit with loading states)
 
 ### Working Features
 
@@ -59,6 +76,16 @@ This is a **prototype** focused on validating core gameplay mechanics and the to
 - Token transaction service with atomic Prisma operations
 - Global error handling with development/production modes
 - User model with progression flags (tutorialCompleted, taskBoardUnlocked, compositeUnlocked)
+- **Task System:**
+  - All 5 task type validators (Sort, Color Match, Arithmetic, Group Separation, Defragmentation)
+  - Task generation service with difficulty scaling (1-3)
+  - Tutorial task seeding (5 tasks, one per type)
+  - GET /api/tasks with filters (type, difficulty, status)
+  - POST /api/tasks/:id/accept with atomic operations and race condition protection
+  - POST /api/tasks/:id/submit with validation and token rewards
+  - Task expiration system with automatic cleanup
+  - Task abandonment functionality
+  - Test user seeding (alice, bob, charlie with 100 tokens each)
 
 **Frontend:**
 - React 19.1.1 with Vite 7.1.12 and TypeScript
@@ -69,6 +96,19 @@ This is a **prototype** focused on validating core gameplay mechanics and the to
 - Complete authentication flow (Login → Register → Protected Dashboard)
 - Toast notifications system
 - React Router with protected/public route wrappers
+- **Task Board:**
+  - Task list page with grid layout
+  - Filter by type, difficulty
+  - 30-second automatic polling for updates
+  - Manual refresh button
+  - Task cards show title, type, difficulty, reward, time estimate
+  - Accept button on each task
+- **Task Execution Flow:**
+  - Accept → Execute → Submit with loading states
+  - TaskExecutor routes to appropriate task UI
+  - Task abandonment support
+  - Success/error feedback with notifications
+  - Automatic redirect after submission
 - **All 5 Task Type UIs implemented:**
   - Sort List: Drag-and-drop reordering with dnd-kit
   - Color Match: RGB sliders for color matching (10%/7%/5% tolerance by difficulty)
