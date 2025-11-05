@@ -103,11 +103,13 @@ Tasks that one player completes in a single session.
   - Time: 10-30 seconds
   - Reward: 5-12 tokens
 
-- **Defragmentation**: Organize colored blocks into contiguous regions
-  - Example: Move blocks to consolidate colors (like Windows defrag)
-  - UI: Grid with drag-and-drop or swap controls
+- **Defragmentation**: Group same-colored blocks contiguously
+  - Example: Arrange grid so each color forms a contiguous group when read left-to-right, top-to-bottom
+  - UI: Click-to-swap grid (any two cells can swap)
+  - Mechanic: Colors must be contiguous in reading order (like defragmenting files on disk)
   - Time: 60-120 seconds
   - Reward: 15-30 tokens
+  - See DEFRAG_TASK_DESIGN.md for detailed mechanic explanation
 
 **Hard Tasks** (High Difficulty, High Tokens)
 - **Pattern Recognition**: Identify sequences or anomalies

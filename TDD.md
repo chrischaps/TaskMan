@@ -651,15 +651,20 @@ interface GroupSeparationSolution {
 #### Defragmentation Task
 ```typescript
 interface DefragData {
-  grid: string[][]; // 2D array of colors or IDs ('R', 'G', 'B', or empty '')
+  grid: string[][]; // 2D array of colors or IDs ('R', 'G', 'B', 'Y', or empty '')
   rows: number;
   cols: number;
 }
 
 interface DefragSolution {
-  grid: string[][]; // Defragmented grid
-  moveCount: number; // Number of moves taken
+  grid: string[][]; // Defragmented grid (colors contiguous in reading order)
+  moveCount: number; // Number of swaps taken
 }
+
+// Validation: Each color must form a contiguous group when read left-to-right, top-to-bottom
+// Example valid: [[R,R,G], [G,B,B], [_,_,_]] -> reading: R,R,G,G,B,B,_,_,_ (all Rs together, Gs together, Bs together)
+// Example invalid: [[R,G,R], [_,_,_], [_,_,_]] -> reading: R,G,R,_,_,_,_,_,_ (Rs separated by G)
+// See DEFRAG_TASK_DESIGN.md for complete mechanic details
 ```
 
 #### Arithmetic Task

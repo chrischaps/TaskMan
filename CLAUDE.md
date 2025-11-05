@@ -10,7 +10,7 @@ This is a **prototype** focused on validating core gameplay mechanics and the to
 
 ## Repository Status
 
-**Current State:** Phase 1 Foundation - COMPLETE ✅
+**Current State:** Phase 2 Task UIs - PARTIALLY COMPLETE (All 5 Task Type UIs Done ✅)
 
 ### Completed Work
 
@@ -41,6 +41,13 @@ This is a **prototype** focused on validating core gameplay mechanics and the to
 - ✅ FE-005: Axios API client with JWT interceptors
 - ✅ FE-006: Authentication UI (Login, Register, Dashboard pages)
 
+**Frontend Implementation (Phase 2 - Task UIs - COMPLETE 5/5 tasks):**
+- ✅ FE-009: Sort List task UI with drag-and-drop (dnd-kit)
+- ✅ FE-010: Color Match task UI with RGB sliders
+- ✅ FE-011: Arithmetic task UI with number input
+- ✅ FE-012: Group Separation task UI with drag-to-buckets
+- ✅ FE-013: Defragmentation task UI with click-to-swap (contiguous color grouping mechanic)
+
 ### Working Features
 
 **Backend:**
@@ -62,6 +69,12 @@ This is a **prototype** focused on validating core gameplay mechanics and the to
 - Complete authentication flow (Login → Register → Protected Dashboard)
 - Toast notifications system
 - React Router with protected/public route wrappers
+- **All 5 Task Type UIs implemented:**
+  - Sort List: Drag-and-drop reordering with dnd-kit
+  - Color Match: RGB sliders for color matching (10%/7%/5% tolerance by difficulty)
+  - Arithmetic: Number input for mathematical expressions
+  - Group Separation: Drag items into category buckets by attributes
+  - Defragmentation: Click-to-swap grid puzzle (contiguous color grouping)
 
 ## Architecture Overview
 
@@ -94,6 +107,67 @@ This is a **prototype** focused on validating core gameplay mechanics and the to
 4. **Composite Task Premium:** Composite tasks award 15% more tokens than the sum of subtasks to incentivize task management.
 
 ## Recent Development Sessions
+
+### Session 4 - Task Type UIs Implementation
+**Date:** November 5, 2025
+**Tasks Completed:** FE-009, FE-010, FE-011, FE-012, FE-013
+**Duration:** ~4 hours
+
+**Work Done:**
+1. **FE-009:** Sort List Task UI
+   - Implemented drag-and-drop using dnd-kit/sortable
+   - Displays items in vertical list with alphabetical, numerical, or length sorting criteria
+   - Real-time feedback during dragging with visual indicators
+   - Integrated into TaskExecutor component
+
+2. **FE-010:** Color Match Task UI
+   - Created RGB sliders (0-255 range) with custom styling
+   - Side-by-side target vs current color display
+   - Live color preview updates as sliders change
+   - Fixed submission field name (submittedColor) to match backend validator
+   - Balanced tolerance values: 10%/7%/5% for difficulties 1/2/3
+
+3. **FE-011:** Arithmetic Task UI
+   - Number input field with Enter key support
+   - Large expression display in gradient background
+   - Form validation prevents invalid number submission
+   - Instructions card with PEMDAS reminder
+
+4. **FE-012:** Group Separation Task UI
+   - Drag-and-drop interface with dnd-kit
+   - Items show all attributes with grouping attribute highlighted
+   - Visual indicators: colored circles (colors), shape symbols (shapes), scaled boxes (sizes)
+   - Ungrouped area with remaining count
+   - Category buckets show item counts
+   - Submit disabled until all items grouped
+
+5. **FE-013:** Defragmentation Task UI
+   - Click-to-swap grid interface (any two cells can swap)
+   - Colored blocks (R/G/B/Y) with distinct styling
+   - Move counter tracks swaps
+   - **New mechanic**: Colors must be contiguous in reading order (left-to-right, top-to-bottom)
+   - Real-time validation checks color contiguity
+   - Fixed type imports from dnd-kit
+
+**Technical Decisions:**
+- Enhanced seed script to create 3 tasks per type (15 total test tasks) to avoid frequent reseeding
+- Type assertions needed for literal difficulty types in seed script (`as 1 | 2 | 3`)
+- Changed defragmentation from column-based (move to top) to color-based (contiguous grouping)
+- Event types from dnd-kit must use `import type` syntax
+
+**Defragmentation Mechanic Redesign:**
+- **Old design**: Move blocks to top of columns, eliminate gaps per column
+- **New design**: Group same colors contiguously when read left-to-right, top-to-bottom
+- Created comprehensive DEFRAG_TASK_DESIGN.md document
+- Updated frontend validation logic to check color contiguity
+- Updated backend validator (checkDefragmentation function)
+- Removed column-only swap restriction
+- Makes colors central to the puzzle mechanic
+
+**Testing:**
+- All 5 task type UIs tested and working
+- Defragmentation validation correctly checks for contiguous color groups
+- Seed script creates variety of test tasks with varying difficulties
 
 ### Session 3 - Frontend Foundation & Backend Services
 **Date:** November 4-5, 2025 (continued)
@@ -229,11 +303,17 @@ TaskMan/
 │   ├── tsconfig.json          # ✅ TypeScript config
 │   ├── package.json           # ✅ Dependencies
 │   └── README.md              # ✅ Backend documentation
-├── frontend/                   # ✅ Phase 1 Complete
+├── frontend/                   # ✅ Phase 1 Complete, ✅ Phase 2 Task UIs Complete
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── Notifications.tsx # ✅ Toast notification system
-│   │   │   └── tasks/         # ⏳ Task UIs (Phase 2)
+│   │   │   ├── TaskExecutor.tsx  # ✅ Routes to task type UIs
+│   │   │   └── tasks/         # ✅ All 5 task UIs complete
+│   │   │   │   ├── SortListTask.tsx        # ✅ Drag-and-drop sorting
+│   │   │   │   ├── ColorMatchTask.tsx      # ✅ RGB sliders
+│   │   │   │   ├── ArithmeticTask.tsx      # ✅ Number input
+│   │   │   │   ├── GroupSeparationTask.tsx # ✅ Drag to buckets
+│   │   │   │   └── DefragmentationTask.tsx # ✅ Click-to-swap grid
 │   │   ├── pages/
 │   │   │   ├── Login.tsx      # ✅ Login page with validation
 │   │   │   ├── Register.tsx   # ✅ Registration page
@@ -259,6 +339,7 @@ TaskMan/
 ├── CLAUDE.md                  # ✅ This file
 ├── GDD.md                     # ✅ Game Design Document
 ├── TDD.md                     # ✅ Technical Design Document
+├── DEFRAG_TASK_DESIGN.md      # ✅ Defragmentation mechanic detailed guide
 ├── IMPLEMENTATION_PLAN.md     # ✅ Task breakdown
 └── DEPLOYMENT_COSTS.md        # ✅ Cost analysis
 ```

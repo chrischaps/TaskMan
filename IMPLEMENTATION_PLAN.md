@@ -477,7 +477,7 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Refreshes when tab regains focus
     - Shows loading state
 
-- [ ] **FE-009**: Create Sort List task UI (1 day)
+- [x] **FE-009**: Create Sort List task UI (1 day) ✅ COMPLETE
   - **Description:** Drag-and-drop sortable list
   - **Dependencies:** FE-007
   - **Deliverables:**
@@ -485,12 +485,13 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Drag-and-drop with dnd-kit
     - Submit button
   - **Acceptance Criteria:**
-    - Can drag items to reorder
-    - Visual feedback during drag
-    - Submit sends sorted array
-    - Shows success/error feedback
+    - Can drag items to reorder ✓
+    - Visual feedback during drag ✓
+    - Submit sends sorted array ✓
+    - Shows success/error feedback ✓
+  - **Completed:** November 5, 2025
 
-- [ ] **FE-010**: Create Color Match task UI (1 day)
+- [x] **FE-010**: Create Color Match task UI (1 day) ✅ COMPLETE
   - **Description:** RGB sliders to match target color
   - **Dependencies:** FE-007
   - **Deliverables:**
@@ -499,12 +500,14 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Live preview of current color
     - Target color display
   - **Acceptance Criteria:**
-    - Sliders control RGB values (0-255)
-    - Shows current color preview
-    - Shows target color
-    - Submit sends RGB values
+    - Sliders control RGB values (0-255) ✓
+    - Shows current color preview ✓
+    - Shows target color ✓
+    - Submit sends RGB values (submittedColor) ✓
+    - Tolerance: 10%/7%/5% by difficulty ✓
+  - **Completed:** November 5, 2025
 
-- [ ] **FE-011**: Create Arithmetic task UI (0.5 days)
+- [x] **FE-011**: Create Arithmetic task UI (0.5 days) ✅ COMPLETE
   - **Description:** Simple number input for calculation
   - **Dependencies:** FE-007
   - **Deliverables:**
@@ -512,11 +515,13 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Number input field
     - Expression display
   - **Acceptance Criteria:**
-    - Shows math expression clearly
-    - Number input with validation
-    - Submit sends answer
+    - Shows math expression clearly ✓
+    - Number input with validation ✓
+    - Submit sends answer ✓
+    - Enter key support ✓
+  - **Completed:** November 5, 2025
 
-- [ ] **FE-012**: Create Group Separation task UI (1.5 days)
+- [x] **FE-012**: Create Group Separation task UI (1.5 days) ✅ COMPLETE
   - **Description:** Drag items into category buckets
   - **Dependencies:** FE-009
   - **Deliverables:**
@@ -525,25 +530,30 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Drop zones for categories
     - Visual grouping
   - **Acceptance Criteria:**
-    - Can drag items to groups
-    - Shows which group each item is in
-    - Clear visual distinction between groups
-    - Submit sends grouping data
+    - Can drag items to groups ✓
+    - Shows which group each item is in ✓
+    - Clear visual distinction between groups ✓
+    - Submit sends grouping data ✓
+    - Visual indicators (colors, shapes, sizes) ✓
+  - **Completed:** November 5, 2025
 
-- [ ] **FE-013**: Create Defragmentation task UI (2 days)
-  - **Description:** Grid with drag-to-swap blocks (most complex)
+- [x] **FE-013**: Create Defragmentation task UI (2 days) ✅ COMPLETE
+  - **Description:** Click-to-swap grid with contiguous color grouping mechanic
   - **Dependencies:** FE-009
   - **Deliverables:**
-    - `components/tasks/DefragTask.tsx`
-    - Grid display (colored blocks)
-    - Swap mechanism (click two blocks or drag)
+    - `components/tasks/DefragmentationTask.tsx`
+    - Grid display (colored blocks R/G/B/Y)
+    - Click-to-swap mechanism (any two cells)
     - Move counter
   - **Acceptance Criteria:**
-    - Grid renders with colored blocks
-    - Can swap blocks
-    - Tracks number of moves
-    - Visual feedback for swaps
-    - Submit sends final grid state
+    - Grid renders with colored blocks ✓
+    - Can swap any two blocks (click-to-swap) ✓
+    - Tracks number of moves ✓
+    - Visual feedback for selected cell ✓
+    - Submit sends final grid state ✓
+    - Validation: colors contiguous in reading order ✓
+  - **Notes:** Mechanic changed from column-based to contiguous color grouping
+  - **Completed:** November 5, 2025
 
 - [ ] **FE-014**: Create task execution flow (1 day)
   - **Description:** Accept → Execute → Submit flow
