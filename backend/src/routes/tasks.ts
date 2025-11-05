@@ -6,6 +6,8 @@ import { z } from 'zod';
 import prisma from '../lib/prisma';
 import { authMiddleware } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
+import { validateTask } from '../validators/taskValidators';
+import { TokenService } from '../services/tokenService';
 
 const router = Router();
 
@@ -289,6 +291,152 @@ router.post(
     res.json({
       message: 'Task accepted successfully',
       task: acceptedTask,
+    });
+  })
+);
+
+// ============================================================================
+// POST /api/tasks/:id/submit - Submit task solution
+// ============================================================================
+
+router.post(
+  '/:id/submit',
+  authMiddleware,
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const taskId = req.params.id;
+    const userId = req.user!.userId;
+    const solution = req.body;
+
+    // Validate UUID format
+    if (!taskId || taskId.length !== 36) {
+      res.status(400).json({
+        message: 'Invalid task ID format',
+      });
+      return;
+    }
+
+    // Fetch the task with all necessary data
+    const task = await prisma.task.findUnique({
+      where: { id: taskId },
+      select: {
+        id: true,
+        type: true,
+        title: true,
+        data: true,
+        solution: true,
+        tokenReward: true,
+        status: true,
+        acceptedById: true,
+        creatorId: true,
+      },
+    });
+
+    // Validate task exists
+    if (!task) {
+      res.status(404).json({
+        message: 'Task not found',
+      });
+      return;
+    }
+
+    // Validate task is in progress and accepted by current user
+    if (task.status !== 'in_progress') {
+      res.status(400).json({
+        message: 'Task is not in progress',
+        status: task.status,
+      });
+      return;
+    }
+
+    if (task.acceptedById !== userId) {
+      res.status(403).json({
+        message: 'You have not accepted this task',
+      });
+      return;
+    }
+
+    // Get previous submission count for attempt number
+    const previousSubmissions = await prisma.taskSubmission.count({
+      where: {
+        taskId,
+        userId,
+      },
+    });
+
+    const attemptNumber = previousSubmissions + 1;
+
+    // Validate the submission using the appropriate validator
+    const validationResult = validateTask(task.type, solution, task.data);
+
+    // Create submission record
+    const submission = await prisma.taskSubmission.create({
+      data: {
+        taskId,
+        userId,
+        submission: solution,
+        isCorrect: validationResult.isCorrect,
+        feedback: validationResult as any,
+        attemptNumber,
+      },
+    });
+
+    // If correct, award tokens and mark task as completed
+    if (validationResult.isCorrect) {
+      // Use transaction to ensure atomicity
+      await prisma.$transaction(async (tx) => {
+        // Update task status to completed
+        await tx.task.update({
+          where: { id: taskId },
+          data: {
+            status: 'completed',
+            completedAt: new Date(),
+          },
+        });
+
+        // Update user stats
+        await tx.user.update({
+          where: { id: userId },
+          data: {
+            tasksCompleted: {
+              increment: 1,
+            },
+          },
+        });
+      });
+
+      // Award tokens (uses its own transaction)
+      const { newBalance } = await TokenService.awardTokens(
+        userId,
+        task.tokenReward,
+        `Completed task: ${task.title}`
+      );
+
+      res.json({
+        success: true,
+        message: 'Task completed successfully!',
+        validation: validationResult,
+        tokensAwarded: task.tokenReward,
+        newBalance,
+        submission: {
+          id: submission.id,
+          attemptNumber: submission.attemptNumber,
+          createdAt: submission.createdAt,
+        },
+      });
+      return;
+    }
+
+    // If incorrect, allow retry
+    res.json({
+      success: false,
+      message: 'Submission incorrect. You can try again.',
+      validation: validationResult,
+      submission: {
+        id: submission.id,
+        attemptNumber: submission.attemptNumber,
+        createdAt: submission.createdAt,
+      },
+      canRetry: true,
     });
   })
 );
