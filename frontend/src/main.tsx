@@ -9,6 +9,8 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import TaskBoard from './pages/TaskBoard'
+import TaskExecution from './pages/TaskExecution'
+import TestTasks from './pages/TestTasks'
 import Notifications from './components/Notifications'
 
 // Create a client with default options
@@ -73,6 +75,15 @@ createRoot(document.getElementById('root')!).render(
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/tasks/:taskId"
+            element={
+              <ProtectedRoute>
+                <TaskExecution />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/test-tasks" element={<TestTasks />} />
         </Routes>
       </BrowserRouter>
       <ReactQueryDevtools initialIsOpen={false} />

@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import apiClient from '../services/apiClient'
+import { useNavigate } from 'react-router-dom'
 import TaskCard from '../components/TaskCard'
 import { useUIStore } from '../stores/uiStore'
 import { useTaskBoard } from '../hooks/useTaskBoard'
 
 export default function TaskBoard() {
+  const navigate = useNavigate()
   const [filters, setFilters] = useState({
     type: '',
     difficulty: '',
@@ -15,7 +15,6 @@ export default function TaskBoard() {
   })
 
   const addNotification = useUIStore((state) => state.addNotification)
-  const queryClient = useQueryClient()
 
   // Fetch tasks with automatic polling
   const {
@@ -26,32 +25,9 @@ export default function TaskBoard() {
     isFetching,
   } = useTaskBoard(filters)
 
-  // Accept task mutation
-  const acceptMutation = useMutation({
-    mutationFn: async (taskId: string) => {
-      const response = await apiClient.post(`/api/tasks/${taskId}/accept`)
-      return response.data
-    },
-    onSuccess: (data) => {
-      addNotification({
-        type: 'success',
-        message: `Task accepted: ${data.task.title}`,
-      })
-      // Refresh task list
-      queryClient.invalidateQueries({ queryKey: ['tasks'] })
-      // TODO: Navigate to task detail or show task UI
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || 'Failed to accept task'
-      addNotification({
-        type: 'error',
-        message,
-      })
-    },
-  })
-
   const handleAcceptTask = (taskId: string) => {
-    acceptMutation.mutate(taskId)
+    // Navigate to task execution page (accept happens there)
+    navigate(`/tasks/${taskId}`)
   }
 
   const handleFilterChange = (key: string, value: string) => {
@@ -224,7 +200,7 @@ export default function TaskBoard() {
                   key={task.id}
                   task={task}
                   onAccept={handleAcceptTask}
-                  isAccepting={acceptMutation.isPending}
+                  isAccepting={false}
                 />
               ))}
             </div>
