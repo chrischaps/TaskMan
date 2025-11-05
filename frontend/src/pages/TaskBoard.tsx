@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import apiClient from '../services/apiClient'
 import TaskCard from '../components/TaskCard'
 import { useUIStore } from '../stores/uiStore'
-import type { Task, TasksResponse } from '../types/task'
+import { useTaskBoard } from '../hooks/useTaskBoard'
 
 export default function TaskBoard() {
   const [filters, setFilters] = useState({
@@ -17,29 +17,14 @@ export default function TaskBoard() {
   const addNotification = useUIStore((state) => state.addNotification)
   const queryClient = useQueryClient()
 
-  // Fetch tasks
+  // Fetch tasks with automatic polling
   const {
     data,
     isLoading,
     error,
     refetch,
     isFetching,
-  } = useQuery({
-    queryKey: ['tasks', filters],
-    queryFn: async () => {
-      const params = new URLSearchParams()
-      params.append('page', filters.page.toString())
-      if (filters.type) params.append('type', filters.type)
-      if (filters.difficulty) params.append('difficulty', filters.difficulty)
-      if (filters.minReward) params.append('minReward', filters.minReward)
-      if (filters.maxReward) params.append('maxReward', filters.maxReward)
-
-      const response = await apiClient.get<TasksResponse>(`/api/tasks?${params}`)
-      return response.data
-    },
-    staleTime: 30000, // 30 seconds
-    refetchOnWindowFocus: true,
-  })
+  } = useTaskBoard(filters)
 
   // Accept task mutation
   const acceptMutation = useMutation({
