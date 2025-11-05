@@ -1,0 +1,117 @@
+import { Router, Request, Response } from 'express';
+import { z } from 'zod';
+import prisma from '../lib/prisma';
+import { hashPassword } from '../utils/hash';
+import { generateToken } from '../utils/jwt';
+
+const router = Router();
+
+// Validation schemas
+const registerSchema = z.object({
+  username: z
+    .string()
+    .min(3, 'Username must be at least 3 characters')
+    .max(50, 'Username must not exceed 50 characters')
+    .regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, underscores, and hyphens'),
+  email: z
+    .string()
+    .email('Invalid email address')
+    .max(255, 'Email must not exceed 255 characters'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(100, 'Password must not exceed 100 characters'),
+});
+
+/**
+ * POST /api/auth/register
+ * Register a new user
+ */
+router.post('/register', async (req: Request, res: Response) => {
+  try {
+    // Validate request body
+    const validationResult = registerSchema.safeParse(req.body);
+
+    if (!validationResult.success) {
+      res.status(400).json({
+        error: 'Validation Error',
+        message: 'Invalid input data',
+        details: validationResult.error.issues.map((err) => ({
+          field: err.path.join('.'),
+          message: err.message,
+        })),
+      });
+      return;
+    }
+
+    const { username, email, password } = validationResult.data;
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [{ email }, { username }],
+      },
+    });
+
+    if (existingUser) {
+      if (existingUser.email === email) {
+        res.status(409).json({
+          error: 'Conflict',
+          message: 'Email already registered',
+        });
+        return;
+      }
+      if (existingUser.username === username) {
+        res.status(409).json({
+          error: 'Conflict',
+          message: 'Username already taken',
+        });
+        return;
+      }
+    }
+
+    // Hash password
+    const passwordHash = await hashPassword(password);
+
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        username,
+        email,
+        passwordHash,
+      },
+    });
+
+    // Generate JWT token
+    const token = generateToken({
+      userId: user.id,
+      email: user.email,
+      username: user.username,
+    });
+
+    // Return user data and token
+    res.status(201).json({
+      message: 'User registered successfully',
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        tokenBalance: user.tokenBalance,
+        level: user.level,
+        tasksCompleted: user.tasksCompleted,
+        tutorialCompleted: user.tutorialCompleted,
+        taskBoardUnlocked: user.taskBoardUnlocked,
+        compositeUnlocked: user.compositeUnlocked,
+      },
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'An error occurred during registration',
+    });
+  }
+});
+
+export default router;
