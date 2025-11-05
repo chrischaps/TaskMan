@@ -43,13 +43,7 @@ export default function DefragmentationTask({
       return
     }
 
-    // If clicking a different column, deselect and select new cell
-    if (selectedCell.col !== col) {
-      setSelectedCell({ row, col })
-      return
-    }
-
-    // Same column - perform swap
+    // Different cell - perform swap
     const newGrid = grid.map((r) => [...r])
     const temp = newGrid[selectedCell.row][selectedCell.col]
     newGrid[selectedCell.row][selectedCell.col] = newGrid[row][col]
@@ -67,18 +61,38 @@ export default function DefragmentationTask({
     })
   }
 
-  // Check if defragmented (all blocks at top with no gaps)
+  // Check if defragmented (colors are contiguous in reading order)
   const isDefragmented = () => {
-    for (let col = 0; col < cols; col++) {
-      let foundEmpty = false
-      for (let row = 0; row < rows; row++) {
-        if (grid[row][col] === '') {
-          foundEmpty = true
-        } else if (foundEmpty) {
-          return false
-        }
+    // Flatten grid to reading order (left-to-right, top-to-bottom)
+    const sequence: string[] = []
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        sequence.push(grid[row][col])
       }
     }
+
+    // Track the range (start and end positions) for each color
+    const colorRanges = new Map<string, { start: number; end: number }>()
+
+    sequence.forEach((cell, index) => {
+      if (cell !== '') {
+        if (!colorRanges.has(cell)) {
+          colorRanges.set(cell, { start: index, end: index })
+        } else {
+          colorRanges.get(cell)!.end = index
+        }
+      }
+    })
+
+    // Check if each color is contiguous
+    for (const [color, range] of colorRanges) {
+      const count = sequence.filter((c) => c === color).length
+      const rangeSize = range.end - range.start + 1
+      if (rangeSize !== count) {
+        return false // Color is fragmented
+      }
+    }
+
     return true
   }
 
@@ -91,12 +105,13 @@ export default function DefragmentationTask({
         <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h3 className="font-semibold text-blue-900 mb-2">Defragment the Grid</h3>
           <p className="text-sm text-blue-800 mb-2">
-            Move all colored blocks to the top of each column, eliminating gaps.
+            Group same-colored blocks together so each color is contiguous when reading left-to-right, top-to-bottom.
           </p>
           <div className="text-xs text-blue-700 space-y-1">
-            <div>• Click a cell to select it (yellow border)</div>
-            <div>• Click another cell in the same column to swap them</div>
-            <div>• Keep swapping until all blocks are at the top with no gaps</div>
+            <div>• Click a cell to select it (yellow ring)</div>
+            <div>• Click any other cell to swap them</div>
+            <div>• Goal: All blocks of the same color must be grouped together</div>
+            <div>• Reading order: left-to-right on each row, then next row</div>
           </div>
         </div>
 
@@ -186,7 +201,7 @@ export default function DefragmentationTask({
 
         {!complete && (
           <p className="text-sm text-amber-600 text-center mt-3">
-            All blocks must be at the top of their columns with no gaps below
+            Each color must form a contiguous group in reading order
           </p>
         )}
       </div>

@@ -237,7 +237,7 @@ export function validateDefragmentation(
   if (!isDefragmented) {
     return {
       isCorrect: false,
-      details: 'Grid is not properly defragmented: blocks must be at the top with no gaps',
+      details: 'Grid is not properly defragmented: each color must form a contiguous group in reading order',
     };
   }
 
@@ -302,21 +302,39 @@ function blocksEqual(a: Record<string, number>, b: Record<string, number>): bool
 
 /**
  * Checks if a grid is properly defragmented
- * All blocks should be at the top of each column with no gaps
+ * All blocks of the same color must be contiguous in reading order
+ * (left-to-right, top-to-bottom)
  */
 function checkDefragmentation(grid: string[][], cols: number): boolean {
-  for (let col = 0; col < cols; col++) {
-    let foundEmpty = false;
+  const rows = grid.length;
 
-    for (let row = 0; row < grid.length; row++) {
-      const cell = grid[row][col];
+  // Flatten grid to reading order
+  const sequence: string[] = [];
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      sequence.push(grid[row][col]);
+    }
+  }
 
-      if (cell === '') {
-        foundEmpty = true;
-      } else if (foundEmpty) {
-        // Found a block after an empty cell - not defragmented
-        return false;
+  // Track the range (start and end positions) for each color
+  const colorRanges = new Map<string, { start: number; end: number }>();
+
+  sequence.forEach((cell, index) => {
+    if (cell !== '') {
+      if (!colorRanges.has(cell)) {
+        colorRanges.set(cell, { start: index, end: index });
+      } else {
+        colorRanges.get(cell)!.end = index;
       }
+    }
+  });
+
+  // Check if each color is contiguous
+  for (const [color, range] of colorRanges) {
+    const count = sequence.filter((c) => c === color).length;
+    const rangeSize = range.end - range.start + 1;
+    if (rangeSize !== count) {
+      return false; // Color is fragmented
     }
   }
 
