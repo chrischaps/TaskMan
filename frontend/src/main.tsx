@@ -37,56 +37,58 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 }
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Notifications />
-        <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route
-            path="/login"
-            element={
-              <PublicRoute>
-                <Login />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              <PublicRoute>
-                <Register />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/tasks"
-            element={
-              <ProtectedRoute>
-                <TaskBoard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/tasks/:taskId"
-            element={
-              <ProtectedRoute>
-                <TaskExecution />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/test-tasks" element={<TestTasks />} />
-        </Routes>
-      </BrowserRouter>
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
-  </StrictMode>,
+  // Disabled StrictMode due to double-mount issues with task acceptance
+  // TODO: Re-enable once we have proper idempotent task acceptance
+  // <StrictMode>
+  <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
+      <Notifications />
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tasks"
+          element={
+            <ProtectedRoute>
+              <TaskBoard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tasks/:taskId"
+          element={
+            <ProtectedRoute>
+              <TaskExecution />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/test-tasks" element={<TestTasks />} />
+      </Routes>
+    </BrowserRouter>
+    <ReactQueryDevtools initialIsOpen={false} />
+  </QueryClientProvider>
+  // </StrictMode>,
 )

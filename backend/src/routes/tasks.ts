@@ -200,8 +200,11 @@ router.post(
     const taskId = req.params.id;
     const userId = req.user!.userId;
 
+    console.log('[POST /api/tasks/:id/accept] Request received:', { taskId, userId });
+
     // Validate UUID format (basic check)
     if (!taskId || taskId.length !== 36) {
+      console.log('[POST /api/tasks/:id/accept] Invalid task ID format');
       res.status(400).json({
         message: 'Invalid task ID format',
       });
@@ -209,6 +212,7 @@ router.post(
     }
 
     // Fetch task to calculate expiration time
+    console.log('[POST /api/tasks/:id/accept] Fetching task for expiration calculation');
     const taskForExpiration = await prisma.task.findUnique({
       where: { id: taskId },
       select: {
@@ -220,7 +224,10 @@ router.post(
       },
     });
 
+    console.log('[POST /api/tasks/:id/accept] Task data:', taskForExpiration);
+
     if (!taskForExpiration) {
+      console.log('[POST /api/tasks/:id/accept] Task not found');
       res.status(404).json({
         message: 'Task not found',
       });
@@ -228,14 +235,32 @@ router.post(
     }
 
     // Calculate expiration time
+    console.log('[POST /api/tasks/:id/accept] Calculating expiration time');
     const expiresAt = calculateExpirationTime(
       taskForExpiration.estimatedTime || 60,
       taskForExpiration.difficulty || 1,
       taskForExpiration.type
     );
+    console.log('[POST /api/tasks/:id/accept] Expiration time:', expiresAt);
+
+    // Verify user exists (prevent FK constraint error)
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      console.log('[POST /api/tasks/:id/accept] User not found (stale token?):', userId);
+      res.status(401).json({
+        message: 'Invalid user session. Please log in again.',
+      });
+      return;
+    }
+
+    console.log('[POST /api/tasks/:id/accept] User verified:', user.username);
 
     // Atomic task acceptance with race condition prevention
     // Using Prisma's updateMany with WHERE conditions to ensure atomicity
+    console.log('[POST /api/tasks/:id/accept] Attempting to accept task');
     const result = await prisma.task.updateMany({
       where: {
         id: taskId,
@@ -246,7 +271,7 @@ router.post(
       },
       data: {
         status: 'in_progress',
-        acceptedById: userId,
+        acceptedById: user.id,
         acceptedAt: new Date(),
         expiresAt, // Set calculated expiration time
       },
@@ -320,6 +345,80 @@ router.post(
     res.json({
       message: 'Task accepted successfully',
       task: acceptedTask,
+    });
+  })
+);
+
+// ============================================================================
+// POST /api/tasks/:id/abandon - Abandon an accepted task
+// ============================================================================
+
+router.post(
+  '/:id/abandon',
+  authMiddleware,
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const taskId = req.params.id;
+    const userId = req.user!.userId;
+
+    console.log('[POST /api/tasks/:id/abandon] Request received:', { taskId, userId });
+
+    // Validate UUID format
+    if (!taskId || taskId.length !== 36) {
+      res.status(400).json({
+        message: 'Invalid task ID format',
+      });
+      return;
+    }
+
+    // Fetch the task
+    const task = await prisma.task.findUnique({
+      where: { id: taskId },
+      select: {
+        id: true,
+        status: true,
+        acceptedById: true,
+      },
+    });
+
+    if (!task) {
+      res.status(404).json({
+        message: 'Task not found',
+      });
+      return;
+    }
+
+    // Verify task is in progress
+    if (task.status !== 'in_progress') {
+      res.status(400).json({
+        message: 'Task is not in progress',
+        status: task.status,
+      });
+      return;
+    }
+
+    // Verify task is accepted by current user
+    if (task.acceptedById !== userId) {
+      res.status(403).json({
+        message: 'You have not accepted this task',
+      });
+      return;
+    }
+
+    // Release the task back to available pool
+    await prisma.task.update({
+      where: { id: taskId },
+      data: {
+        status: 'available',
+        acceptedById: null,
+        acceptedAt: null,
+        expiresAt: null,
+      },
+    });
+
+    console.log('[POST /api/tasks/:id/abandon] Task abandoned successfully');
+
+    res.json({
+      message: 'Task abandoned successfully',
     });
   })
 );

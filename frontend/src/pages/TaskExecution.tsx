@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import apiClient from '../services/apiClient'
@@ -13,24 +13,47 @@ export default function TaskExecution() {
   const navigate = useNavigate()
   const addNotification = useUIStore((state) => state.addNotification)
   const { user, setUser } = useUserStore()
-  const hasAttemptedAccept = useRef(false)
+
+  console.log('[TaskExecution] Component render:', {
+    taskId,
+    user: user?.username,
+  })
 
   // Accept task on mount
   const acceptMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiClient.post<{ message: string; task: Task }>(
-        `/api/tasks/${id}/accept`
-      )
-      return response.data
+      console.log('[TaskExecution] Accept mutation starting for task:', id)
+      try {
+        const response = await apiClient.post<{ message: string; task: Task }>(
+          `/api/tasks/${id}/accept`
+        )
+        console.log('[TaskExecution] Accept mutation success:', response.data)
+        return response.data
+      } catch (error: any) {
+        console.error('[TaskExecution] Accept mutation error:', error)
+
+        // 409 means task already accepted (can happen in StrictMode double-mount)
+        // Fetch the task data instead of failing
+        if (error.response?.status === 409) {
+          console.log('[TaskExecution] Task already accepted, fetching task data from GET endpoint')
+          // TODO: We need a GET endpoint for this. For now, just navigate back.
+          throw new Error('Task already accepted by another user')
+        }
+
+        throw error
+      }
     },
     onSuccess: (data) => {
+      console.log('[TaskExecution] onSuccess called with:', data)
       addNotification({
         type: 'success',
         message: `Task accepted: ${data.task.title}`,
       })
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || 'Failed to accept task'
+      console.error('[TaskExecution] onError called:', error)
+
+      const message = error.response?.data?.message || error.message || 'Failed to accept task'
       addNotification({
         type: 'error',
         message,
@@ -38,6 +61,13 @@ export default function TaskExecution() {
       // Navigate back to task board on error
       navigate('/tasks')
     },
+  })
+
+  console.log('[TaskExecution] Accept mutation state:', {
+    isPending: acceptMutation.isPending,
+    isError: acceptMutation.isError,
+    isSuccess: acceptMutation.isSuccess,
+    data: acceptMutation.data,
   })
 
   // Submit task solution
@@ -84,14 +114,80 @@ export default function TaskExecution() {
     },
   })
 
-  // Accept task when component mounts (prevent double-mount in dev mode)
+  // Abandon task
+  const abandonMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiClient.post(`/api/tasks/${id}/abandon`)
+      return response.data
+    },
+    onSuccess: () => {
+      addNotification({
+        type: 'success',
+        message: 'Task abandoned. It has been returned to the task board.',
+        duration: 3000,
+      })
+      // Navigate back to task board
+      setTimeout(() => {
+        navigate('/tasks')
+      }, 1000)
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to abandon task'
+      addNotification({
+        type: 'error',
+        message,
+      })
+    },
+  })
+
+  // Accept task when component mounts
   useEffect(() => {
-    if (taskId && !hasAttemptedAccept.current) {
-      hasAttemptedAccept.current = true
+    console.log('[TaskExecution] useEffect triggered:', {
+      taskId,
+      isPending: acceptMutation.isPending,
+      isError: acceptMutation.isError,
+      hasData: !!acceptMutation.data,
+    })
+
+    // Only call mutation if we haven't started yet (no data, no error, not pending)
+    const shouldAccept = taskId && !acceptMutation.data && !acceptMutation.isError && !acceptMutation.isPending
+
+    if (shouldAccept) {
+      console.log('[TaskExecution] Calling acceptMutation.mutate')
       acceptMutation.mutate(taskId)
+    } else {
+      console.log('[TaskExecution] Skipping accept:', {
+        reason: !taskId ? 'no taskId' : acceptMutation.data ? 'has data' : acceptMutation.isError ? 'has error' : 'is pending'
+      })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskId])
+
+  // Call hooks before any early returns (Rules of Hooks)
+  const task = acceptMutation.data?.task
+  const timer = useTaskTimer(task?.expiresAt)
+
+  // Handle expiration (must be before early returns)
+  useEffect(() => {
+    // Only trigger expiration if we have a valid expiresAt AND the timer shows expired
+    // AND the actual expiration time has passed (to avoid false positives during initial render)
+    if (task?.expiresAt && timer.isExpired) {
+      const expirationTime = new Date(task.expiresAt).getTime()
+      const now = Date.now()
+
+      // Double-check that time has actually passed (not just initial state)
+      if (now > expirationTime) {
+        console.log('[TaskExecution] Task has expired, navigating back')
+        addNotification({
+          type: 'error',
+          message: 'Task has expired! Returning to task board...',
+        })
+        setTimeout(() => {
+          navigate('/tasks')
+        }, 2000)
+      }
+    }
+  }, [timer.isExpired, task?.expiresAt, navigate, addNotification])
 
   const handleSubmit = (solution: any) => {
     if (taskId) {
@@ -99,8 +195,15 @@ export default function TaskExecution() {
     }
   }
 
-  // Loading state
-  if (acceptMutation.isPending) {
+  const handleAbandon = () => {
+    if (taskId && window.confirm('Are you sure you want to abandon this task? It will be returned to the task board for others to complete.')) {
+      abandonMutation.mutate(taskId)
+    }
+  }
+
+  // Loading state - only show if pending AND no data yet
+  if (acceptMutation.isPending && !acceptMutation.data) {
+    console.log('[TaskExecution] Rendering loading state')
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -112,7 +215,8 @@ export default function TaskExecution() {
   }
 
   // Error state (will redirect)
-  if (acceptMutation.isError || !acceptMutation.data) {
+  if (acceptMutation.isError || !acceptMutation.data || !task) {
+    console.log('[TaskExecution] Rendering error state')
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -122,21 +226,7 @@ export default function TaskExecution() {
     )
   }
 
-  const task = acceptMutation.data.task
-  const timer = useTaskTimer(task.expiresAt)
-
-  // Handle expiration
-  useEffect(() => {
-    if (timer.isExpired && task.expiresAt) {
-      addNotification({
-        type: 'error',
-        message: 'Task has expired! Returning to task board...',
-      })
-      setTimeout(() => {
-        navigate('/tasks')
-      }, 2000)
-    }
-  }, [timer.isExpired, task.expiresAt, navigate, addNotification])
+  console.log('[TaskExecution] Rendering task execution view')
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -214,13 +304,20 @@ export default function TaskExecution() {
           </div>
         )}
 
-        {/* Back button */}
-        <div className="mt-6 text-center">
+        {/* Action buttons */}
+        <div className="mt-6 flex items-center justify-center gap-4">
           <button
             onClick={() => navigate('/tasks')}
             className="text-blue-600 hover:text-blue-700 font-medium"
           >
             ← Back to Task Board
+          </button>
+          <button
+            onClick={handleAbandon}
+            disabled={abandonMutation.isPending}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed font-medium transition-colors"
+          >
+            {abandonMutation.isPending ? 'Abandoning...' : 'Abandon Task'}
           </button>
         </div>
       </div>
