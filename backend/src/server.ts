@@ -1,8 +1,9 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import prisma from './lib/prisma';
 import authRoutes from './routes/auth';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 dotenv.config();
 
@@ -49,26 +50,11 @@ app.get('/api/health', async (_req: Request, res: Response) => {
   }
 });
 
-// 404 handler
-app.use((req: Request, res: Response) => {
-  res.status(404).json({
-    error: 'Not Found',
-    message: `Route ${req.method} ${req.path} not found`,
-  });
-});
+// 404 handler - must be after all routes
+app.use(notFoundHandler);
 
-// Error handler
-interface ErrorWithStatus extends Error {
-  status?: number;
-}
-
-app.use((err: ErrorWithStatus, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('Error:', err);
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
-  });
-});
+// Global error handler - must be last
+app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {

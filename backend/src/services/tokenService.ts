@@ -15,17 +15,7 @@ export class TokenService {
     }
 
     const result = await prisma.$transaction(async (tx) => {
-      // Create transaction record
-      await tx.tokenTransaction.create({
-        data: {
-          userId,
-          amount,
-          type: 'award',
-          reason,
-        },
-      });
-
-      // Update user balance
+      // Update user balance first
       const updatedUser = await tx.user.update({
         where: { id: userId },
         data: {
@@ -35,6 +25,16 @@ export class TokenService {
         },
         select: {
           tokenBalance: true,
+        },
+      });
+
+      // Create transaction record with new balance
+      await tx.tokenTransaction.create({
+        data: {
+          userId,
+          amount,
+          balance: updatedUser.tokenBalance,
+          reason,
         },
       });
 
@@ -72,16 +72,6 @@ export class TokenService {
         throw new Error('Insufficient token balance');
       }
 
-      // Create transaction record
-      await tx.tokenTransaction.create({
-        data: {
-          userId,
-          amount: -amount,
-          type: 'deduct',
-          reason,
-        },
-      });
-
       // Update user balance
       const updatedUser = await tx.user.update({
         where: { id: userId },
@@ -92,6 +82,16 @@ export class TokenService {
         },
         select: {
           tokenBalance: true,
+        },
+      });
+
+      // Create transaction record with new balance
+      await tx.tokenTransaction.create({
+        data: {
+          userId,
+          amount: -amount,
+          balance: updatedUser.tokenBalance,
+          reason,
         },
       });
 
