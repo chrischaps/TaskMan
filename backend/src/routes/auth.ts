@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import prisma from '../lib/prisma';
-import { hashPassword } from '../utils/hash';
+import { hashPassword, comparePassword } from '../utils/hash';
 import { generateToken } from '../utils/jwt';
 
 const router = Router();
@@ -21,6 +21,11 @@ const registerSchema = z.object({
     .string()
     .min(8, 'Password must be at least 8 characters')
     .max(100, 'Password must not exceed 100 characters'),
+});
+
+const loginSchema = z.object({
+  login: z.string().min(1, 'Email or username is required'),
+  password: z.string().min(1, 'Password is required'),
 });
 
 /**
@@ -110,6 +115,87 @@ router.post('/register', async (req: Request, res: Response) => {
     res.status(500).json({
       error: 'Internal Server Error',
       message: 'An error occurred during registration',
+    });
+  }
+});
+
+/**
+ * POST /api/auth/login
+ * Login an existing user
+ */
+router.post('/login', async (req: Request, res: Response) => {
+  try {
+    // Validate request body
+    const validationResult = loginSchema.safeParse(req.body);
+
+    if (!validationResult.success) {
+      res.status(400).json({
+        error: 'Validation Error',
+        message: 'Invalid input data',
+        details: validationResult.error.issues.map((err) => ({
+          field: err.path.join('.'),
+          message: err.message,
+        })),
+      });
+      return;
+    }
+
+    const { login, password } = validationResult.data;
+
+    // Find user by email or username
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [{ email: login }, { username: login }],
+      },
+    });
+
+    if (!user) {
+      res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Invalid credentials',
+      });
+      return;
+    }
+
+    // Verify password
+    const isPasswordValid = await comparePassword(password, user.passwordHash);
+
+    if (!isPasswordValid) {
+      res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Invalid credentials',
+      });
+      return;
+    }
+
+    // Generate JWT token
+    const token = generateToken({
+      userId: user.id,
+      email: user.email,
+      username: user.username,
+    });
+
+    // Return user data and token
+    res.status(200).json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        tokenBalance: user.tokenBalance,
+        level: user.level,
+        tasksCompleted: user.tasksCompleted,
+        tutorialCompleted: user.tutorialCompleted,
+        taskBoardUnlocked: user.taskBoardUnlocked,
+        compositeUnlocked: user.compositeUnlocked,
+      },
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'An error occurred during login',
     });
   }
 });

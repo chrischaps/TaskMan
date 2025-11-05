@@ -11,7 +11,9 @@ Backend API server for TaskMan - a multiplayer task completion game.
 - ✅ BE-003: Setup Prisma with PostgreSQL schema
 - ✅ BE-004: Setup local PostgreSQL with Docker
 - ✅ BE-005: Implement authentication middleware
-- ⏳ BE-006: Create user registration endpoint
+- ✅ BE-006: Create user registration endpoint
+- ✅ BE-007: Create user login endpoint
+- ⏳ BE-008: Create GET /api/auth/me endpoint
 
 ## Setup
 
