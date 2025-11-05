@@ -27,3 +27,13 @@ export interface TasksResponse {
     hasPrevPage: boolean
   }
 }
+
+// Task-specific data types
+export interface SortListData {
+  items: string[]
+  sortCriteria: 'alphabetical' | 'numerical' | 'length'
+}
+
+export interface SortListSolution {
+  sortedItems: string[]
+}
