@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useUserStore } from './stores/userStore'
 import { useUIStore } from './stores/uiStore'
+import apiClient from './services/apiClient'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -45,6 +46,21 @@ function App() {
     }
   }
 
+  const testApiClient = async () => {
+    try {
+      const response = await apiClient.get('/api/health')
+      addNotification({
+        type: 'success',
+        message: `API connected! ${response.data.message || 'Backend is healthy'}`,
+      })
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        message: 'API connection failed. Make sure backend is running.',
+      })
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full">
@@ -68,6 +84,13 @@ function App() {
             className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 shadow-md hover:shadow-lg"
           >
             Test User Store
+          </button>
+
+          <button
+            onClick={testApiClient}
+            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 shadow-md hover:shadow-lg"
+          >
+            Test API Connection
           </button>
 
           {user && (
