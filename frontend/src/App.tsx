@@ -1,7 +1,18 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 
 function App() {
   const [count, setCount] = useState(0)
+
+  // Demo query to verify TanStack Query is working
+  const { data, isLoading } = useQuery({
+    queryKey: ['demo'],
+    queryFn: async () => {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      return { message: 'TanStack Query is working!' }
+    },
+  })
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
@@ -19,9 +30,18 @@ function App() {
           >
             Count is {count}
           </button>
-          <p className="text-sm text-gray-500 text-center">
-            Tailwind CSS is working! 🎨
-          </p>
+          <div className="text-sm text-gray-500 text-center space-y-2">
+            <p>Tailwind CSS is working! 🎨</p>
+            <p>
+              {isLoading ? (
+                <span className="animate-pulse">Loading query...</span>
+              ) : (
+                <span className="text-green-600 font-semibold">
+                  ✓ {data?.message}
+                </span>
+              )}
+            </p>
+          </div>
         </div>
       </div>
     </div>
