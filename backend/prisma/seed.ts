@@ -3,7 +3,7 @@
 // Run with: npx prisma db seed
 
 import { PrismaClient } from '@prisma/client';
-import { generateTutorialTasks } from '../src/services/taskGenerator';
+import { generateTutorialTasks, generateTaskByType } from '../src/services/taskGenerator';
 import { hashPassword } from '../src/utils/hash';
 
 const prisma = new PrismaClient();
@@ -127,6 +127,57 @@ async function main() {
   }
 
   // =========================================================================
+  // Generate and Create Additional Test Tasks
+  // =========================================================================
+
+  console.log('\nGenerating additional test tasks for easier testing...');
+
+  const taskTypes = ['sort_list', 'color_match', 'arithmetic', 'group_separation', 'defragmentation'];
+  const tasksPerType = 3;
+  let testTaskCount = 0;
+
+  // Delete existing non-tutorial tasks to avoid duplicates
+  const deletedTestTasks = await prisma.task.deleteMany({
+    where: { isTutorial: false },
+  });
+  console.log(`Deleted ${deletedTestTasks.count} existing test tasks\n`);
+
+  for (const taskType of taskTypes) {
+    console.log(`Creating ${tasksPerType} tasks of type: ${taskType}`);
+
+    for (let i = 0; i < tasksPerType; i++) {
+      // Generate tasks with varying difficulties (1, 2, 3)
+      const difficulty = (i % 3) + 1;
+      const task = generateTaskByType(taskType, { difficulty, isTutorial: false });
+
+      const createdTask = await prisma.task.create({
+        data: {
+          type: task.type,
+          category: 'test',
+          title: task.title,
+          description: task.description,
+          data: task.data,
+          solution: task.solution,
+          tokenReward: task.tokenReward,
+          difficulty: task.difficulty,
+          estimatedTime: task.estimatedTime,
+          status: 'available',
+          isComposite: false,
+          isTutorial: false,
+          creatorId: systemUser.id,
+        },
+      });
+
+      testTaskCount++;
+      console.log(
+        `  ✅ Created: ${createdTask.type} (Difficulty ${createdTask.difficulty}) - "${createdTask.title}"`
+      );
+    }
+  }
+
+  console.log(`\n✅ Created ${testTaskCount} test tasks total`);
+
+  // =========================================================================
   // Summary
   // =========================================================================
 
@@ -135,11 +186,13 @@ async function main() {
 
   const totalTasks = await prisma.task.count();
   const tutorialCount = await prisma.task.count({ where: { isTutorial: true } });
+  const testTasksCount = await prisma.task.count({ where: { isTutorial: false } });
   const userCount = await prisma.user.count();
 
   console.log(`Total Users: ${userCount}`);
   console.log(`Total Tasks: ${totalTasks}`);
   console.log(`Tutorial Tasks: ${tutorialCount}`);
+  console.log(`Test Tasks: ${testTasksCount} (3 per type × 5 types)`);
   console.log('─'.repeat(50));
 
   console.log('\n✨ Database seeding complete!\n');
