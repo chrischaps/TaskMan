@@ -186,4 +186,111 @@ router.get(
   })
 );
 
+// ============================================================================
+// POST /api/tasks/:id/accept - Accept a task
+// ============================================================================
+
+router.post(
+  '/:id/accept',
+  authMiddleware,
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const taskId = req.params.id;
+    const userId = req.user!.userId;
+
+    // Validate UUID format (basic check)
+    if (!taskId || taskId.length !== 36) {
+      res.status(400).json({
+        message: 'Invalid task ID format',
+      });
+      return;
+    }
+
+    // Atomic task acceptance with race condition prevention
+    // Using Prisma's updateMany with WHERE conditions to ensure atomicity
+    const result = await prisma.task.updateMany({
+      where: {
+        id: taskId,
+        status: 'available', // Only update if still available
+        creatorId: {
+          not: userId, // Prevent accepting own tasks
+        },
+      },
+      data: {
+        status: 'in_progress',
+        acceptedById: userId,
+        acceptedAt: new Date(),
+      },
+    });
+
+    // Check if update was successful
+    if (result.count === 0) {
+      // Task not found, already taken, or user trying to accept own task
+      const task = await prisma.task.findUnique({
+        where: { id: taskId },
+        select: {
+          id: true,
+          status: true,
+          creatorId: true,
+        },
+      });
+
+      if (!task) {
+        res.status(404).json({
+          message: 'Task not found',
+        });
+        return;
+      }
+
+      if (task.creatorId === userId) {
+        res.status(400).json({
+          message: 'Cannot accept your own task',
+        });
+        return;
+      }
+
+      if (task.status !== 'available') {
+        res.status(409).json({
+          message: 'Task already taken',
+          status: task.status,
+        });
+        return;
+      }
+
+      // Shouldn't reach here, but handle unexpected cases
+      res.status(500).json({
+        message: 'Failed to accept task',
+      });
+      return;
+    }
+
+    // Fetch the accepted task with full details
+    const acceptedTask = await prisma.task.findUnique({
+      where: { id: taskId },
+      select: {
+        id: true,
+        type: true,
+        title: true,
+        description: true,
+        data: true,
+        tokenReward: true,
+        difficulty: true,
+        estimatedTime: true,
+        status: true,
+        acceptedAt: true,
+        creator: {
+          select: {
+            id: true,
+            username: true,
+          },
+        },
+      },
+    });
+
+    res.json({
+      message: 'Task accepted successfully',
+      task: acceptedTask,
+    });
+  })
+);
+
 export default router;
