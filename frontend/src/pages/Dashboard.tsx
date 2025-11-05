@@ -59,13 +59,19 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="bg-yellow-50 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                Coming Soon
+            <div className="bg-blue-50 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                Ready to Complete Tasks?
               </h3>
-              <p className="text-gray-600">
-                Task board, task creation, and gameplay features will be implemented in the next phase!
+              <p className="text-gray-600 mb-4">
+                Browse available tasks, earn tokens, and level up your account!
               </p>
+              <button
+                onClick={() => navigate('/tasks')}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
+              >
+                Go to Task Board
+              </button>
             </div>
           </div>
         </div>
