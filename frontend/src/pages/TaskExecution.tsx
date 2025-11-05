@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import apiClient from '../services/apiClient'
@@ -13,6 +13,7 @@ export default function TaskExecution() {
   const navigate = useNavigate()
   const addNotification = useUIStore((state) => state.addNotification)
   const { user, setUser } = useUserStore()
+  const hasAttemptedAccept = useRef(false)
 
   // Accept task on mount
   const acceptMutation = useMutation({
@@ -29,13 +30,6 @@ export default function TaskExecution() {
       })
     },
     onError: (error: any) => {
-      // Ignore 409 errors (task already taken) - this can happen in development
-      // due to React StrictMode running effects twice
-      if (error.response?.status === 409) {
-        console.log('Task already accepted (likely from double-mount in dev mode)')
-        return
-      }
-
       const message = error.response?.data?.message || 'Failed to accept task'
       addNotification({
         type: 'error',
@@ -90,14 +84,10 @@ export default function TaskExecution() {
     },
   })
 
-  // Accept task when component mounts
+  // Accept task when component mounts (prevent double-mount in dev mode)
   useEffect(() => {
-    if (
-      taskId &&
-      !acceptMutation.data &&
-      !acceptMutation.isError &&
-      !acceptMutation.isPending
-    ) {
+    if (taskId && !hasAttemptedAccept.current) {
+      hasAttemptedAccept.current = true
       acceptMutation.mutate(taskId)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
