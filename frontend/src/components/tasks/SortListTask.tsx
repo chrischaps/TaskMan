@@ -46,7 +46,7 @@ function SortableItem({ id, item }: SortableItemProps) {
       style={style}
       {...attributes}
       {...listeners}
-      className="bg-white border-2 border-gray-300 rounded-lg p-4 mb-2 cursor-move hover:border-blue-400 hover:shadow-md transition-all select-none"
+      className="bg-white border-2 border-gray-300 rounded-lg p-4 mb-2 cursor-move hover:border-blue-400 hover:shadow-md transition-[border-color,box-shadow] select-none"
     >
       <div className="flex items-center gap-3">
         <svg
