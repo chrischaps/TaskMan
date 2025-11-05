@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import prisma from './lib/prisma';
 import authRoutes from './routes/auth';
+import taskRoutes from './routes/tasks';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -17,6 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/tasks', taskRoutes);
 
 // Health check / Hello World endpoint
 app.get('/', (_req: Request, res: Response) => {
