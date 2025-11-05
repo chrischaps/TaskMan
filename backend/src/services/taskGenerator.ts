@@ -150,9 +150,9 @@ export function generateColorMatchTask(options: TaskGenerationOptions = {}): Gen
   const difficulty = options.difficulty || randomInt(1, 3);
   const isTutorial = options.isTutorial || false;
 
-  // Tolerance decreases with difficulty (GDD specifies 5% accuracy)
-  // Using stricter tolerances to ensure visual accuracy
-  const tolerance = difficulty === 1 ? 8 : difficulty === 2 ? 5 : 3;
+  // Tolerance decreases with difficulty (GDD specifies 5% accuracy for hardest)
+  // Balanced tolerances: challenging but achievable
+  const tolerance = difficulty === 1 ? 10 : difficulty === 2 ? 7 : 5;
 
   // Generate random target color
   const targetColor = {
