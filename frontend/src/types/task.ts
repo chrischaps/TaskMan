@@ -42,3 +42,15 @@ export interface SortListData {
 export interface SortListSolution {
   sortedItems: string[]
 }
+
+export interface GroupSeparationData {
+  items: Array<{
+    id: string
+    attributes: Record<string, string>
+  }>
+  groupBy: string
+}
+
+export interface GroupSeparationSolution {
+  groups: Record<string, string[]>
+}
