@@ -28,6 +28,13 @@ export default function TaskExecution() {
       })
     },
     onError: (error: any) => {
+      // Ignore 409 errors (task already taken) - this can happen in development
+      // due to React StrictMode running effects twice
+      if (error.response?.status === 409) {
+        console.log('Task already accepted (likely from double-mount in dev mode)')
+        return
+      }
+
       const message = error.response?.data?.message || 'Failed to accept task'
       addNotification({
         type: 'error',
@@ -84,9 +91,15 @@ export default function TaskExecution() {
 
   // Accept task when component mounts
   useEffect(() => {
-    if (taskId && !acceptMutation.data && !acceptMutation.isError) {
+    if (
+      taskId &&
+      !acceptMutation.data &&
+      !acceptMutation.isError &&
+      !acceptMutation.isPending
+    ) {
       acceptMutation.mutate(taskId)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskId])
 
   const handleSubmit = (solution: any) => {
