@@ -4,21 +4,30 @@ A web-based multiplayer task completion game where players complete micro-tasks 
 
 ## Project Status
 
-**Phase 1: Foundation** - In Progress
+**Phase 1: Foundation** - In Progress (53% Complete)
 
-### Completed Tasks
+### Completed Tasks (Session 1 & 2)
+**Prerequisites:**
 - ✅ ENV-001: GCP account setup
 - ✅ ENV-002: Development environment setup
 - ✅ ENV-003: Review design documents
+
+**Backend Setup:**
 - ✅ BE-001: Initialize Node.js + Express project
 - ✅ BE-002: Configure TypeScript
 - ✅ BE-003: Setup Prisma with PostgreSQL schema
 - ✅ BE-004: Setup local PostgreSQL with Docker
+- ✅ BE-005: Implement authentication middleware (JWT + bcrypt)
+- ✅ BE-006: Create user registration endpoint
+- ✅ BE-007: Create user login endpoint
+- ✅ BE-008: Create GET /api/auth/me endpoint (protected)
 
 ### Next Tasks
-- ⏳ BE-005: Implement authentication middleware
-- ⏳ BE-006: Create user registration endpoint
-- ⏳ FE-001: Initialize React + Vite project
+- 🔄 BE-009: Implement token transaction service (1.5 days)
+- ⏳ BE-010: Create basic error handling middleware (0.5 days)
+- ⏳ FE-001 through FE-007: Frontend setup (can start in parallel)
+
+**Overall Progress:** 11/70 tasks complete (16%)
 
 ## Quick Start
 
@@ -70,32 +79,43 @@ npm run dev
 
 ```
 TaskMan/
-├── backend/              # Node.js + Express + Prisma backend
+├── backend/                    # ✅ Node.js + Express + Prisma backend
 │   ├── src/
-│   │   ├── server.ts    # Main Express application
+│   │   ├── server.ts          # ✅ Main Express application
+│   │   ├── routes/
+│   │   │   └── auth.ts        # ✅ Auth endpoints (register, login, /me)
+│   │   ├── middleware/
+│   │   │   └── auth.ts        # ✅ JWT authentication middleware
+│   │   ├── utils/
+│   │   │   ├── jwt.ts         # ✅ JWT utilities
+│   │   │   └── hash.ts        # ✅ Password hashing (bcrypt)
 │   │   └── lib/
-│   │       └── prisma.ts # Prisma Client singleton
+│   │       └── prisma.ts      # ✅ Prisma Client singleton
 │   ├── prisma/
-│   │   ├── schema.prisma # Database schema
-│   │   └── migrations/   # Database migrations
-│   └── package.json
-├── frontend/             # React + Vite frontend (not yet implemented)
-├── docker-compose.yml    # PostgreSQL container
-├── GDD.md                # Game Design Document
-├── TDD.md                # Technical Design Document
-├── IMPLEMENTATION_PLAN.md # Task breakdown
-├── DEPLOYMENT_COSTS.md   # Cost analysis
-└── CLAUDE.md             # Claude Code guidance
+│   │   ├── schema.prisma      # ✅ Database schema
+│   │   └── migrations/        # ✅ Database migrations
+│   ├── dist/                  # ✅ Compiled JavaScript
+│   ├── .env                   # ✅ Environment variables
+│   └── package.json           # ✅ Dependencies
+├── frontend/                   # ⏳ React + Vite frontend (not started)
+├── docker-compose.yml          # ✅ PostgreSQL container
+├── GDD.md                      # ✅ Game Design Document
+├── TDD.md                      # ✅ Technical Design Document
+├── IMPLEMENTATION_PLAN.md      # ✅ Task breakdown (11/70 complete)
+├── DEPLOYMENT_COSTS.md         # ✅ Cost analysis
+└── CLAUDE.md                   # ✅ Claude Code guidance (updated)
 ```
 
 ## Technology Stack
 
-### Backend
+### Backend (✅ Functional)
 - **Runtime:** Node.js 22+
 - **Language:** TypeScript 5.9+
 - **Framework:** Express 5.1
 - **ORM:** Prisma 6.18
 - **Database:** PostgreSQL 15 (Docker)
+- **Authentication:** JWT (jsonwebtoken 9.0.2) + bcrypt 6.0.0
+- **Validation:** Zod 3.x
 
 ### Frontend (Planned)
 - **Framework:** React 18+
@@ -154,15 +174,18 @@ docker exec -it taskman-postgres psql -U taskman -d taskman
 
 ## API Endpoints
 
-### Currently Available
+### Currently Available ✅
 - `GET /` - API server status
 - `GET /api/health` - Health check + database connection status
+- `POST /api/auth/register` - User registration (returns JWT)
+- `POST /api/auth/login` - User login (accepts email or username, returns JWT)
+- `GET /api/auth/me` - Get current user profile (protected, requires JWT)
 
 ### Coming Soon
-- Authentication endpoints (register, login, me)
 - Task endpoints (list, create, accept, submit)
 - Composite task endpoints
 - Tutorial endpoints
+- Token transaction endpoints
 
 ## Development Workflow
 
