@@ -2,6 +2,7 @@ import SortListTask from './tasks/SortListTask'
 import ColorMatchTask from './tasks/ColorMatchTask'
 import ArithmeticTask from './tasks/ArithmeticTask'
 import GroupSeparationTask from './tasks/GroupSeparationTask'
+import DefragmentationTask from './tasks/DefragmentationTask'
 import type { Task } from '../types/task'
 import type { SortListData, SortListSolution } from '../types/task'
 
@@ -35,19 +36,7 @@ export default function TaskExecutor({ task, onSubmit, isSubmitting }: TaskExecu
       return <GroupSeparationTask task={task} onSubmit={onSubmit} isSubmitting={isSubmitting} />
 
     case 'defragmentation':
-      return (
-        <div className="max-w-2xl mx-auto p-6">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-yellow-900 mb-2">
-              Defragmentation Task - Not Implemented Yet
-            </h3>
-            <p className="text-yellow-800">
-              This task type will be implemented in FE-013. For now, only Sort List tasks are
-              supported.
-            </p>
-          </div>
-        </div>
-      )
+      return <DefragmentationTask task={task} onSubmit={onSubmit} isSubmitting={isSubmitting} />
 
     default:
       return (

@@ -54,3 +54,14 @@ export interface GroupSeparationData {
 export interface GroupSeparationSolution {
   groups: Record<string, string[]>
 }
+
+export interface DefragData {
+  grid: string[][]
+  rows: number
+  cols: number
+}
+
+export interface DefragSolution {
+  grid: string[][]
+  moveCount: number
+}
