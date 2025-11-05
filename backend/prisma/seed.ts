@@ -45,6 +45,46 @@ async function main() {
   }
 
   // =========================================================================
+  // Create Test Users
+  // =========================================================================
+
+  console.log('\nCreating test users...');
+
+  const testUsers = [
+    { username: 'alice', email: 'alice@test.com', password: 'password123' },
+    { username: 'bob', email: 'bob@test.com', password: 'password123' },
+    { username: 'charlie', email: 'charlie@test.com', password: 'password123' },
+  ];
+
+  for (const testUserData of testUsers) {
+    let testUser = await prisma.user.findUnique({
+      where: { username: testUserData.username },
+    });
+
+    if (!testUser) {
+      const hashedPassword = await hashPassword(testUserData.password);
+
+      testUser = await prisma.user.create({
+        data: {
+          username: testUserData.username,
+          email: testUserData.email,
+          passwordHash: hashedPassword,
+          tokenBalance: 100, // Start with some tokens for testing
+          level: 1,
+          tasksCompleted: 0,
+          tutorialCompleted: false,
+          taskBoardUnlocked: true, // Unlock task board for easier testing
+          compositeUnlocked: false,
+        },
+      });
+
+      console.log(`✅ Test user created: ${testUser.username}`);
+    } else {
+      console.log(`✅ Test user already exists: ${testUser.username}`);
+    }
+  }
+
+  // =========================================================================
   // Generate and Create Tutorial Tasks
   // =========================================================================
 
@@ -109,7 +149,16 @@ async function main() {
   console.log('  - Arithmetic');
   console.log('  - Group Separation');
   console.log('  - Defragmentation');
-  console.log('\nNew users must complete 5 tutorial tasks to unlock the task board.\n');
+  console.log('\n🔑 Test User Credentials:');
+  console.log('─'.repeat(50));
+  console.log('Username: alice   | Email: alice@test.com   | Password: password123');
+  console.log('Username: bob     | Email: bob@test.com     | Password: password123');
+  console.log('Username: charlie | Email: charlie@test.com | Password: password123');
+  console.log('─'.repeat(50));
+  console.log('All test users start with:');
+  console.log('  - 100 tokens');
+  console.log('  - Task board unlocked (for easier testing)');
+  console.log('  - Level 1\n');
 }
 
 main()
