@@ -1,4 +1,4 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
+import axios from 'axios'
 import { useUserStore } from '../stores/userStore'
 
 // Create axios instance with base configuration
@@ -12,16 +12,16 @@ const apiClient = axios.create({
 
 // Request interceptor - Add JWT token to all requests
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
+  (config: any) => {
     const token = useUserStore.getState().token
 
-    if (token) {
+    if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
     }
 
     return config
   },
-  (error: AxiosError) => {
+  (error: any) => {
     return Promise.reject(error)
   }
 )
@@ -31,7 +31,7 @@ apiClient.interceptors.response.use(
   (response) => {
     return response
   },
-  (error: AxiosError) => {
+  (error: any) => {
     if (error.response?.status === 401) {
       // Clear user data and redirect to login
       useUserStore.getState().clearUser()
