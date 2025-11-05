@@ -14,7 +14,10 @@
       "Bash(code:*)",
       "Bash(npm install:*)",
       "Bash(curl:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npm create:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npx tailwindcss init -p)"
     ],
     "deny": [],
     "ask": []
