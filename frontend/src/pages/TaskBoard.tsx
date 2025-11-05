@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import apiClient from '../services/apiClient'
 import TaskCard from '../components/TaskCard'
 import { useUIStore } from '../stores/uiStore'
-import { Task, TasksResponse } from '../types/task'
+import type { Task, TasksResponse } from '../types/task'
 
 export default function TaskBoard() {
   const [filters, setFilters] = useState({

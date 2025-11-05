@@ -1,4 +1,5 @@
 // Task type definitions
+export type {}
 
 export interface Task {
   id: string
