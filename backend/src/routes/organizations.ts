@@ -11,7 +11,7 @@ const router = Router();
  * GET /api/organizations
  * Get all organizations with member counts and task counts
  */
-router.get('/', authMiddleware, async (req, res, next) => {
+router.get('/', authMiddleware, async (_req, res, next) => {
   try {
     const organizations = await OrganizationService.getAllOrganizations();
     res.json(organizations);
@@ -29,7 +29,8 @@ router.get('/:id', authMiddleware, async (req, res, next) => {
     const organization = await OrganizationService.getOrganizationById(req.params.id);
 
     if (!organization) {
-      return res.status(404).json({ message: 'Organization not found' });
+      res.status(404).json({ message: 'Organization not found' });
+      return;
     }
 
     res.json(organization);
