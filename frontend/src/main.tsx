@@ -8,6 +8,7 @@ import './index.css'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
+import Profile from './pages/Profile'
 import TaskBoard from './pages/TaskBoard'
 import TaskExecution from './pages/TaskExecution'
 import TestTasks from './pages/TestTasks'
@@ -72,6 +73,14 @@ createRoot(document.getElementById('root')!).render(
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           }
         />

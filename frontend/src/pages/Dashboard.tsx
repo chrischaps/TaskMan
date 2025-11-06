@@ -8,9 +8,10 @@ import { useScoreboard } from '../hooks/useScoreboard'
 import TaskCard from '../components/TaskCard'
 import { CreateTaskModal } from '../components/CreateTaskModal'
 import Scoreboard from '../components/Scoreboard'
+import UserMenu from '../components/UserMenu'
 
 export default function Dashboard() {
-  const { user, clearUser } = useUserStore()
+  const { user } = useUserStore()
   const navigate = useNavigate()
   const addNotification = useUIStore((state) => state.addNotification)
 
@@ -29,11 +30,6 @@ export default function Dashboard() {
 
   // Fetch scoreboard
   const { data: scoreboard, isLoading: scoreboardLoading } = useScoreboard()
-
-  const handleLogout = () => {
-    clearUser()
-    navigate('/login')
-  }
 
   const handleAcceptTask = (taskId: string) => {
     // Navigate to task execution page
@@ -93,7 +89,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Right: Admin Link & Logout */}
+            {/* Right: Admin Link & User Menu */}
             <div className="flex items-center gap-3">
               {user?.isAdmin && (
                 <button
@@ -103,12 +99,7 @@ export default function Dashboard() {
                   Admin Panel
                 </button>
               )}
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
-              >
-                Logout
-              </button>
+              <UserMenu />
             </div>
           </div>
 
