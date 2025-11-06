@@ -47,6 +47,11 @@ export default function TaskCard({ task, onAccept, isAccepting }: TaskCardProps)
                 Tutorial
               </span>
             )}
+            {task.isOwnTask && (
+              <span className="text-xs font-semibold px-2 py-1 rounded bg-orange-100 text-orange-800">
+                Your Task
+              </span>
+            )}
           </div>
           <h3 className="text-lg font-bold text-gray-900">{task.title}</h3>
         </div>
@@ -117,11 +122,12 @@ export default function TaskCard({ task, onAccept, isAccepting }: TaskCardProps)
         </button>
         {onAccept && (
           <button
-            onClick={() => onAccept(task.id)}
-            disabled={isAccepting}
+            onClick={() => !task.isOwnTask && onAccept(task.id)}
+            disabled={isAccepting || task.isOwnTask}
             className="ml-auto px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            title={task.isOwnTask ? "You can't accept your own task" : ''}
           >
-            {isAccepting ? 'Accepting...' : 'Accept Task'}
+            {task.isOwnTask ? 'Your Task' : isAccepting ? 'Accepting...' : 'Accept Task'}
           </button>
         )}
       </div>

@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import TaskCard from '../components/TaskCard'
+import { CreateTaskModal } from '../components/CreateTaskModal'
 import { useUIStore } from '../stores/uiStore'
 import { useTaskBoard } from '../hooks/useTaskBoard'
+import { Plus } from 'lucide-react'
 
 export default function TaskBoard() {
   const navigate = useNavigate()
@@ -11,8 +13,10 @@ export default function TaskBoard() {
     difficulty: '',
     minReward: '',
     maxReward: '',
+    hideOwnTasks: false,
     page: 1,
   })
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   const addNotification = useUIStore((state) => state.addNotification)
 
@@ -54,26 +58,35 @@ export default function TaskBoard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">Task Board</h1>
-            <button
-              onClick={handleRefresh}
-              disabled={isFetching}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 transition-colors flex items-center gap-2"
-            >
-              <svg
-                className={`w-5 h-5 ${isFetching ? 'animate-spin' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <div className="flex gap-3">
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-              Refresh
-            </button>
+                <Plus size={20} />
+                Create Task
+              </button>
+              <button
+                onClick={handleRefresh}
+                disabled={isFetching}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 transition-colors flex items-center gap-2"
+              >
+                <svg
+                  className={`w-5 h-5 ${isFetching ? 'animate-spin' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                Refresh
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -82,7 +95,7 @@ export default function TaskBoard() {
         {/* Filters */}
         <div className="bg-white rounded-lg shadow p-4 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Filters</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
             {/* Type filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -151,11 +164,24 @@ export default function TaskBoard() {
               />
             </div>
 
+            {/* Hide my tasks checkbox */}
+            <div className="flex items-end">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={filters.hideOwnTasks}
+                  onChange={(e) => handleFilterChange('hideOwnTasks', e.target.checked.toString())}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="text-sm font-medium text-gray-700">Hide My Tasks</span>
+              </label>
+            </div>
+
             {/* Clear filters button */}
             <div className="flex items-end">
               <button
                 onClick={() =>
-                  setFilters({ type: '', difficulty: '', minReward: '', maxReward: '', page: 1 })
+                  setFilters({ type: '', difficulty: '', minReward: '', maxReward: '', hideOwnTasks: false, page: 1 })
                 }
                 className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
               >
@@ -253,6 +279,20 @@ export default function TaskBoard() {
           </div>
         )}
       </div>
+
+      {/* Create Task Modal */}
+      <CreateTaskModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onTaskCreated={() => {
+          refetch()
+          addNotification({
+            type: 'success',
+            message: 'Task will appear on the board for other players!',
+            duration: 3000,
+          })
+        }}
+      />
     </div>
   )
 }

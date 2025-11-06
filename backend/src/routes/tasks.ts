@@ -25,7 +25,153 @@ const getTasksSchema = z.object({
   difficulty: z.string().optional(),
   minReward: z.string().optional(),
   maxReward: z.string().optional(),
+  hideOwnTasks: z.string().optional().default('false'), // New filter to hide own tasks
 });
+
+const createTaskSchema = z.object({
+  type: z.enum(['sort_list', 'color_match', 'arithmetic', 'group_separation', 'defragmentation']),
+  title: z.string().min(3).max(255),
+  description: z.string().max(1000).optional(),
+  data: z.any(), // Task-specific data (will be validated by task type)
+  solution: z.any(), // Expected solution
+  tokenReward: z.number().int().min(5).max(1000),
+  difficulty: z.number().int().min(1).max(5).optional(),
+  estimatedTime: z.number().int().min(10).max(3600).optional(), // 10 seconds to 1 hour
+});
+
+// ============================================================================
+// POST /api/tasks - Create a new task
+// ============================================================================
+
+router.post(
+  '/',
+  authMiddleware,
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    // Validate request body
+    const validation = createTaskSchema.safeParse(req.body);
+
+    if (!validation.success) {
+      res.status(400).json({
+        message: 'Invalid task data',
+        errors: validation.error.issues,
+      });
+      return;
+    }
+
+    const { type, title, description, data, solution, tokenReward, difficulty, estimatedTime } =
+      validation.data;
+
+    const userId = req.user!.userId;
+
+    // Calculate total cost: reward + 20% listing fee
+    const listingFee = Math.ceil(tokenReward * 0.2);
+    const totalCost = tokenReward + listingFee;
+
+    // Check if user has enough tokens
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { tokenBalance: true },
+    });
+
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    if (user.tokenBalance < totalCost) {
+      res.status(400).json({
+        message: 'Insufficient tokens',
+        required: totalCost,
+        available: user.tokenBalance,
+        breakdown: {
+          reward: tokenReward,
+          listingFee: listingFee,
+          total: totalCost,
+        },
+      });
+      return;
+    }
+
+    // Deduct tokens and create task in a transaction
+    const task = await prisma.$transaction(async (tx) => {
+      // Deduct tokens - manual transaction logic
+      const currentUser = await tx.user.findUnique({
+        where: { id: userId },
+        select: { tokenBalance: true },
+      });
+
+      if (!currentUser) {
+        throw new Error('User not found');
+      }
+
+      if (currentUser.tokenBalance < totalCost) {
+        throw new Error('Insufficient token balance');
+      }
+
+      // Update user balance
+      const updatedUser = await tx.user.update({
+        where: { id: userId },
+        data: {
+          tokenBalance: {
+            decrement: totalCost,
+          },
+        },
+        select: {
+          tokenBalance: true,
+        },
+      });
+
+      // Create transaction record
+      await tx.tokenTransaction.create({
+        data: {
+          userId,
+          amount: -totalCost,
+          balance: updatedUser.tokenBalance,
+          reason: `Created task: ${title} (reward: ${tokenReward}, fee: ${listingFee})`,
+        },
+      });
+
+      // Create task
+      const newTask = await tx.task.create({
+        data: {
+          type,
+          category: type, // For atomic tasks, category = type
+          title,
+          description: description || null,
+          data,
+          solution,
+          tokenReward,
+          difficulty: difficulty || null,
+          estimatedTime: estimatedTime || null,
+          status: 'available',
+          isComposite: false,
+          isTutorial: false,
+          creatorId: userId,
+        },
+      });
+
+      return newTask;
+    });
+
+    res.status(201).json({
+      message: 'Task created successfully',
+      task: {
+        id: task.id,
+        type: task.type,
+        title: task.title,
+        tokenReward: task.tokenReward,
+        difficulty: task.difficulty,
+        status: task.status,
+        createdAt: task.createdAt,
+      },
+      cost: {
+        reward: tokenReward,
+        listingFee: listingFee,
+        total: totalCost,
+      },
+    });
+  })
+);
 
 // ============================================================================
 // GET /api/tasks - List available tasks
@@ -46,7 +192,7 @@ router.get(
       return;
     }
 
-    const { page, limit, type, difficulty, minReward, maxReward } = validation.data;
+    const { page, limit, type, difficulty, minReward, maxReward, hideOwnTasks } = validation.data;
 
     // Parse pagination
     const pageNum = parseInt(page, 10);
@@ -64,10 +210,12 @@ router.get(
     // Build where clause
     const where: any = {
       status: 'available',
-      // Exclude tasks created by current user
-      creatorId: {
-        not: req.user!.userId,
-      },
+      // Conditionally exclude tasks created by current user based on filter
+      ...(hideOwnTasks === 'true' ? {
+        creatorId: {
+          not: req.user!.userId,
+        },
+      } : {}),
     };
 
     // Apply filters
@@ -121,6 +269,7 @@ router.get(
           isComposite: true,
           isTutorial: true,
           createdAt: true,
+          creatorId: true,
           creator: {
             select: {
               id: true,
@@ -138,8 +287,14 @@ router.get(
     const hasNextPage = pageNum < totalPages;
     const hasPrevPage = pageNum > 1;
 
+    // Add isOwnTask flag to each task
+    const tasksWithOwnership = tasks.map((task) => ({
+      ...task,
+      isOwnTask: task.creatorId === req.user!.userId,
+    }));
+
     res.json({
-      tasks,
+      tasks: tasksWithOwnership,
       pagination: {
         page: pageNum,
         limit: limitNum,

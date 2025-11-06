@@ -12,6 +12,7 @@ export interface Task {
   estimatedTime: number
   status?: string
   isTutorial: boolean
+  isOwnTask?: boolean
   acceptedAt?: string
   expiresAt?: string
   creator: {
