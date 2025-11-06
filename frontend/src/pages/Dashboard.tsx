@@ -4,8 +4,10 @@ import { Plus } from 'lucide-react'
 import { useUserStore } from '../stores/userStore'
 import { useUIStore } from '../stores/uiStore'
 import { useTaskBoard } from '../hooks/useTaskBoard'
+import { useScoreboard } from '../hooks/useScoreboard'
 import TaskCard from '../components/TaskCard'
 import { CreateTaskModal } from '../components/CreateTaskModal'
+import Scoreboard from '../components/Scoreboard'
 
 export default function Dashboard() {
   const { user, clearUser } = useUserStore()
@@ -24,6 +26,9 @@ export default function Dashboard() {
 
   // Fetch tasks with automatic polling
   const { data, isLoading, error, refetch, isFetching } = useTaskBoard(filters)
+
+  // Fetch scoreboard
+  const { data: scoreboard, isLoading: scoreboardLoading } = useScoreboard()
 
   const handleLogout = () => {
     clearUser()
@@ -114,32 +119,42 @@ export default function Dashboard() {
               <span className="font-bold text-blue-600">{user?.tasksCompleted || 0}</span>
             </div>
           </div>
+
+          {/* Scoreboard */}
+          {scoreboard && scoreboard.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <Scoreboard scoreboard={scoreboard} isLoading={scoreboardLoading} compact />
+            </div>
+          )}
         </div>
       </div>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Welcome Message */}
-        <div className="bg-blue-50 p-4 rounded-lg mb-6">
-          <h2 className="text-lg font-semibold text-gray-800">
-            Welcome back, {user?.username}!
-          </h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Browse available tasks below, or create your own to earn tokens.
-          </p>
-        </div>
+        {user?.organization && (
+          <div className="bg-blue-50 p-4 rounded-lg mb-6">
+            <h2 className="text-lg font-semibold text-gray-800">
+              Welcome back, {user?.username}!
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              You're competing with <span className="font-semibold">{user.organization.name}</span>. Complete tasks to help your organization win!
+            </p>
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-gray-900">Available Tasks</h2>
           <div className="flex gap-3">
-            <button
+            {/* Create Task button hidden for now */}
+            {/* <button
               onClick={() => setIsCreateModalOpen(true)}
               className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
             >
               <Plus size={20} />
               Create Task
-            </button>
+            </button> */}
             <button
               onClick={handleRefresh}
               disabled={isFetching}
