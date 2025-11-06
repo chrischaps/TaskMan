@@ -58,8 +58,8 @@ export default function TaskExecution() {
         type: 'error',
         message,
       })
-      // Navigate back to task board on error
-      navigate('/tasks')
+      // Navigate back to dashboard on error
+      navigate('/dashboard')
     },
   })
 
@@ -92,9 +92,9 @@ export default function TaskExecution() {
           })
         }
 
-        // Navigate back to task board after a short delay
+        // Navigate back to dashboard after a short delay
         setTimeout(() => {
-          navigate('/tasks')
+          navigate('/dashboard')
         }, 2000)
       } else {
         // Incorrect submission
@@ -126,9 +126,9 @@ export default function TaskExecution() {
         message: 'Task abandoned. It has been returned to the task board.',
         duration: 3000,
       })
-      // Navigate back to task board
+      // Navigate back to dashboard
       setTimeout(() => {
-        navigate('/tasks')
+        navigate('/dashboard')
       }, 1000)
     },
     onError: (error: any) => {
@@ -180,10 +180,10 @@ export default function TaskExecution() {
         console.log('[TaskExecution] Task has expired, navigating back')
         addNotification({
           type: 'error',
-          message: 'Task has expired! Returning to task board...',
+          message: 'Task has expired! Returning to dashboard...',
         })
         setTimeout(() => {
-          navigate('/tasks')
+          navigate('/dashboard')
         }, 2000)
       }
     }
@@ -307,10 +307,10 @@ export default function TaskExecution() {
         {/* Action buttons */}
         <div className="mt-6 flex items-center justify-center gap-4">
           <button
-            onClick={() => navigate('/tasks')}
+            onClick={() => navigate('/dashboard')}
             className="text-blue-600 hover:text-blue-700 font-medium"
           >
-            ← Back to Task Board
+            ← Back to Dashboard
           </button>
           <button
             onClick={handleAbandon}
