@@ -2,7 +2,6 @@
 // Handles project management, activation, and task duplication
 
 import prisma from '../lib/prisma';
-import { Prisma } from '@prisma/client';
 
 /**
  * Get all projects
@@ -65,11 +64,12 @@ export async function createProject(data: {
 }) {
   const { taskTemplates, ...projectData } = data;
 
-  // Create project with task count
+  // Create project with task count and templates
   const project = await prisma.project.create({
     data: {
       ...projectData,
       taskCount: taskTemplates.length,
+      taskTemplates: taskTemplates,
       status: 'draft',
     },
   });
@@ -83,7 +83,7 @@ export async function createProject(data: {
  * - Deactivates any other active projects
  * - Duplicates tasks to all organizations
  */
-export async function activateProject(projectId: string, taskTemplates: any[]) {
+export async function activateProject(projectId: string, creatorId: string) {
   // First, check if there's already an active project
   const activeProject = await getActiveProject();
 
@@ -98,8 +98,10 @@ export async function activateProject(projectId: string, taskTemplates: any[]) {
     throw new Error('No organizations available to activate project');
   }
 
-  // Get the project
-  const project = await getProjectById(projectId);
+  // Get the project with templates
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+  });
 
   if (!project) {
     throw new Error('Project not found');
@@ -108,6 +110,12 @@ export async function activateProject(projectId: string, taskTemplates: any[]) {
   if (project.status === 'active') {
     throw new Error('Project is already active');
   }
+
+  if (!project.taskTemplates) {
+    throw new Error('Project has no task templates defined');
+  }
+
+  const taskTemplates = project.taskTemplates as any[];
 
   // Use a transaction to ensure atomicity
   const result = await prisma.$transaction(async (tx) => {
@@ -130,6 +138,7 @@ export async function activateProject(projectId: string, taskTemplates: any[]) {
             ...template,
             organizationId: org.id,
             projectId: projectId,
+            creatorId: creatorId,
             status: 'available',
           },
         });

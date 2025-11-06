@@ -117,6 +117,7 @@ router.post('/register', async (req: Request, res: Response) => {
         tutorialCompleted: user.tutorialCompleted,
         taskBoardUnlocked: user.taskBoardUnlocked,
         compositeUnlocked: user.compositeUnlocked,
+        isAdmin: user.isAdmin,
         organization: user.organization ? {
           id: user.organization.id,
           name: user.organization.name,
@@ -205,6 +206,7 @@ router.post('/login', async (req: Request, res: Response) => {
         tutorialCompleted: user.tutorialCompleted,
         taskBoardUnlocked: user.taskBoardUnlocked,
         compositeUnlocked: user.compositeUnlocked,
+        isAdmin: user.isAdmin,
         organization: user.organization ? {
           id: user.organization.id,
           name: user.organization.name,
@@ -263,6 +265,7 @@ router.get('/me', authMiddleware, async (req: Request, res: Response) => {
         tutorialCompleted: user.tutorialCompleted,
         taskBoardUnlocked: user.taskBoardUnlocked,
         compositeUnlocked: user.compositeUnlocked,
+        isAdmin: user.isAdmin,
         organization: user.organization ? {
           id: user.organization.id,
           name: user.organization.name,

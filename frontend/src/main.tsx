@@ -12,6 +12,12 @@ import TaskBoard from './pages/TaskBoard'
 import TaskExecution from './pages/TaskExecution'
 import TestTasks from './pages/TestTasks'
 import Notifications from './components/Notifications'
+import { AdminRoute } from './components/AdminRoute'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminProjects from './pages/admin/AdminProjects'
+import AdminOrganizations from './pages/admin/AdminOrganizations'
+import AdminUsers from './pages/admin/AdminUsers'
+import AdminTasks from './pages/admin/AdminTasks'
 
 // Create a client with default options
 const queryClient = new QueryClient({
@@ -86,6 +92,46 @@ createRoot(document.getElementById('root')!).render(
           }
         />
         <Route path="/test-tasks" element={<TestTasks />} />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/projects"
+          element={
+            <AdminRoute>
+              <AdminProjects />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/organizations"
+          element={
+            <AdminRoute>
+              <AdminOrganizations />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <AdminRoute>
+              <AdminUsers />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/tasks"
+          element={
+            <AdminRoute>
+              <AdminTasks />
+            </AdminRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
     <ReactQueryDevtools initialIsOpen={false} />

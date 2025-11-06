@@ -12,7 +12,7 @@ const router = Router();
 const createProjectSchema = z.object({
   name: z.string().min(3).max(255),
   description: z.string().optional(),
-  scheduledStartTime: z.string().datetime().optional(),
+  scheduledStartTime: z.string().datetime().optional().or(z.literal('')).transform(val => val === '' ? undefined : val),
   taskTemplates: z.array(z.object({
     type: z.string(),
     category: z.string(),
@@ -23,21 +23,6 @@ const createProjectSchema = z.object({
     tokenReward: z.number().int().positive(),
     difficulty: z.number().int().min(1).max(5).optional(),
     estimatedTime: z.number().int().positive().optional(),
-  })).min(1),
-});
-
-const activateProjectSchema = z.object({
-  taskTemplates: z.array(z.object({
-    type: z.string(),
-    category: z.string(),
-    title: z.string(),
-    description: z.string().optional(),
-    data: z.any(),
-    solution: z.any(),
-    tokenReward: z.number().int().positive(),
-    difficulty: z.number().int().min(1).max(5).optional(),
-    estimatedTime: z.number().int().positive().optional(),
-    creatorId: z.string(),
   })).min(1),
 });
 
@@ -135,7 +120,7 @@ router.post('/', authMiddleware, async (req, res, next) => {
     if (error instanceof z.ZodError) {
       res.status(400).json({
         message: 'Validation error',
-        errors: error.issues,
+        issues: error.issues,
       });
       return;
     }
@@ -149,26 +134,18 @@ router.post('/', authMiddleware, async (req, res, next) => {
  */
 router.post('/:id/activate', authMiddleware, async (req, res, next) => {
   try {
-    const validatedData = activateProjectSchema.parse(req.body);
+    if (!req.user?.userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
 
-    const result = await ProjectService.activateProject(
-      req.params.id,
-      validatedData.taskTemplates
-    );
+    const result = await ProjectService.activateProject(req.params.id, req.user.userId);
 
     res.json({
       message: 'Project activated successfully',
       ...result,
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      res.status(400).json({
-        message: 'Validation error',
-        errors: error.issues,
-      });
-      return;
-    }
-
     if (error instanceof Error) {
       res.status(400).json({ message: error.message });
       return;
@@ -216,7 +193,7 @@ router.post('/:id/schedule', authMiddleware, async (req, res, next) => {
     if (error instanceof z.ZodError) {
       res.status(400).json({
         message: 'Validation error',
-        errors: error.issues,
+        issues: error.issues,
       });
       return;
     }

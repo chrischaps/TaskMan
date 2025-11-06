@@ -150,10 +150,6 @@ export function generateColorMatchTask(options: TaskGenerationOptions = {}): Gen
   const difficulty = options.difficulty || randomInt(1, 3);
   const isTutorial = options.isTutorial || false;
 
-  // Tolerance decreases with difficulty (GDD specifies 5% accuracy for hardest)
-  // Balanced tolerances: challenging but achievable
-  const tolerance = difficulty === 1 ? 10 : difficulty === 2 ? 7 : 5;
-
   // Generate random target color
   const targetColor = {
     r: randomInt(0, 255),
@@ -167,13 +163,12 @@ export function generateColorMatchTask(options: TaskGenerationOptions = {}): Gen
 
   const data: ColorMatchData = {
     targetColor,
-    tolerance,
   };
 
   const solution = { submittedColor: targetColor };
 
   const title = `Match Color ${hexColor}`;
-  const description = `Use the RGB sliders to match the target color within ${tolerance}% accuracy.`;
+  const description = `Use the RGB sliders to match the target color as closely as possible.`;
 
   // Token reward: 10-20 tokens (30-60 seconds)
   const tokenReward = isTutorial ? 15 : randomInt(10, 20);

@@ -28,7 +28,6 @@ export interface SortListSolution {
 // Color Match Task
 export interface ColorMatchData {
   targetColor: { r: number; g: number; b: number };
-  tolerance: number; // Percentage (e.g., 10 means 10%)
 }
 
 export interface ColorMatchSolution {
@@ -104,16 +103,28 @@ export function validateSortList(
 
 /**
  * Validates Color Match task submissions
- * Calculates RGB color difference and applies tolerance
+ * Calculates RGB color difference and applies tolerance based on difficulty
+ *
+ * Tolerance thresholds by difficulty:
+ * - Level 1 (Easy): 10% tolerance
+ * - Level 2 (Medium): 7% tolerance
+ * - Level 3 (Hard): 5% tolerance
+ * - Level 4 (Very Hard): 3% tolerance
+ * - Level 5 (Expert): 2% tolerance
  */
 export function validateColorMatch(
   solution: ColorMatchSolution,
-  taskData: ColorMatchData
+  taskData: ColorMatchData,
+  difficulty: number = 3
 ): ValidationResult {
-  const { r: tr, g: tg, b: tb } = taskData.targetColor;
+  const targetColor = taskData.targetColor;
+
+  const { r: tr, g: tg, b: tb } = targetColor;
   const { r: sr, g: sg, b: sb } = solution.submittedColor;
 
-  const tolerance = taskData.tolerance / 100; // Convert percentage to decimal
+  // Calculate tolerance based on difficulty level (percentage)
+  const tolerancePercent = difficulty === 1 ? 10 : difficulty === 2 ? 7 : difficulty === 3 ? 5 : difficulty === 4 ? 3 : 2;
+  const tolerance = tolerancePercent / 100; // Convert percentage to decimal
 
   const rDiff = Math.abs(tr - sr) / 255;
   const gDiff = Math.abs(tg - sg) / 255;
@@ -126,7 +137,7 @@ export function validateColorMatch(
     isCorrect,
     details: isCorrect
       ? `Great match! Accuracy: ${((1 - avgDiff) * 100).toFixed(1)}%`
-      : `Too far off. Accuracy: ${((1 - avgDiff) * 100).toFixed(1)}%`,
+      : `Too far off. Accuracy: ${((1 - avgDiff) * 100).toFixed(1)}% (needed ${(100 - tolerancePercent)}%+ for difficulty ${difficulty})`,
     score: Math.max(0, 100 - avgDiff * 100),
   };
 }
@@ -377,14 +388,15 @@ function calculateOptimalMoves(grid: string[][]): number {
 export function validateTask(
   taskType: string,
   solution: any,
-  taskData: any
+  taskData: any,
+  difficulty: number = 3
 ): ValidationResult {
   switch (taskType) {
     case 'sort_list':
       return validateSortList(solution, taskData);
 
     case 'color_match':
-      return validateColorMatch(solution, taskData);
+      return validateColorMatch(solution, taskData, difficulty);
 
     case 'arithmetic':
       return validateArithmetic(solution, taskData);

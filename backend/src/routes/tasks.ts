@@ -618,6 +618,7 @@ router.post(
         data: true,
         solution: true,
         tokenReward: true,
+        difficulty: true,
         status: true,
         acceptedById: true,
         creatorId: true,
@@ -669,7 +670,7 @@ router.post(
     const attemptNumber = previousSubmissions + 1;
 
     // Validate the submission using the appropriate validator
-    const validationResult = validateTask(task.type, solution, task.data);
+    const validationResult = validateTask(task.type, solution, task.data, task.difficulty || 3);
 
     // Create submission record
     const submission = await prisma.taskSubmission.create({

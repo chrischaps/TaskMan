@@ -47,6 +47,9 @@ model Project {
   // Task count (for progress tracking)
   taskCount Int @default(0) @map("task_count")
 
+  // Task templates to duplicate when activating
+  taskTemplates Json? @map("task_templates")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -74,6 +77,9 @@ model User {
   tutorialCompleted Boolean @default(false) @map("tutorial_completed")
   taskBoardUnlocked Boolean @default(false) @map("task_board_unlocked")
   compositeUnlocked Boolean @default(false) @map("composite_unlocked")
+
+  // Admin flag
+  isAdmin Boolean @default(false) @map("is_admin")
 
   // Organization membership
   organizationId String?       @map("organization_id") @db.Uuid

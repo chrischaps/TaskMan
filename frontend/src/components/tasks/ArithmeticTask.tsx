@@ -14,6 +14,19 @@ interface ArithmeticData {
 
 export default function ArithmeticTask({ task, onSubmit, isSubmitting }: ArithmeticTaskProps) {
   const data = task.data as ArithmeticData
+
+  // Handle legacy format (operation + operands) - convert to expression
+  const expression = data.expression || (() => {
+    const legacyData = task.data as any
+    if (legacyData.operation && legacyData.operands) {
+      const [a, b] = legacyData.operands
+      if (legacyData.operation === 'add') return `${a} + ${b}`
+      if (legacyData.operation === 'subtract') return `${a} - ${b}`
+      if (legacyData.operation === 'multiply') return `${a} * ${b}`
+    }
+    return 'Invalid expression'
+  })()
+
   const [answer, setAnswer] = useState<string>('')
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -45,7 +58,7 @@ export default function ArithmeticTask({ task, onSubmit, isSubmitting }: Arithme
           </h3>
           <div className="text-center">
             <div className="text-4xl font-bold text-gray-900 font-mono tracking-wide">
-              {data.expression}
+              {expression}
             </div>
           </div>
         </div>

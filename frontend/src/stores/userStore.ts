@@ -10,6 +10,7 @@ export interface User {
   tutorialCompleted: boolean
   taskBoardUnlocked: boolean
   compositeUnlocked: boolean
+  isAdmin: boolean
   organization?: {
     id: string
     name: string

@@ -44,34 +44,22 @@ export default function ColorMatchTask({ task, onSubmit, isSubmitting }: ColorMa
         {/* Target Color Display */}
         <div className="mb-8">
           <h3 className="text-lg font-semibold text-gray-900 mb-3">Target Color</h3>
-          <div className="flex items-center gap-4">
+          <div className="flex justify-center">
             <div
-              className="w-32 h-32 rounded-lg border-4 border-gray-300 shadow-lg"
+              className="w-48 h-48 rounded-lg border-4 border-gray-300 shadow-lg"
               style={{ backgroundColor: targetColorHex }}
             />
-            <div className="text-gray-700">
-              <p className="font-mono text-lg font-bold">{targetColorHex.toUpperCase()}</p>
-              <p className="text-sm text-gray-500 mt-1">
-                RGB({targetColor.r}, {targetColor.g}, {targetColor.b})
-              </p>
-            </div>
           </div>
         </div>
 
         {/* Current Color Display */}
         <div className="mb-8">
           <h3 className="text-lg font-semibold text-gray-900 mb-3">Your Color</h3>
-          <div className="flex items-center gap-4">
+          <div className="flex justify-center">
             <div
-              className="w-32 h-32 rounded-lg border-4 border-blue-500 shadow-lg transition-colors duration-200"
+              className="w-48 h-48 rounded-lg border-4 border-blue-500 shadow-lg transition-colors duration-200"
               style={{ backgroundColor: currentColorHex }}
             />
-            <div className="text-gray-700">
-              <p className="font-mono text-lg font-bold">{currentColorHex.toUpperCase()}</p>
-              <p className="text-sm text-gray-500 mt-1">
-                RGB({r}, {g}, {b})
-              </p>
-            </div>
           </div>
         </div>
 
