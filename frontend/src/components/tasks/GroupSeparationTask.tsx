@@ -7,7 +7,7 @@ import {
   useSensors,
 } from '@dnd-kit/core'
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Task } from '../../types/task'
 import type { GroupSeparationData, GroupSeparationSolution } from '../../types/task'
@@ -102,43 +102,40 @@ export default function GroupSeparationTask({
   const isComplete = ungroupedCount === 0
 
   return (
-    <div className="p-8">
-      <div className="max-w-5xl mx-auto">
-        {/* Instructions */}
-        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="font-semibold text-blue-900 mb-2">
-            Group items by <span className="font-mono bg-blue-100 px-2 py-1 rounded">{groupBy}</span>
-          </h3>
-          <p className="text-sm text-blue-800">
-            Drag each item into the correct group based on its {groupBy} attribute.
-          </p>
-        </div>
+    <div className="p-4 max-w-7xl mx-auto">
+      {/* Compact Instructions */}
+      <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <h3 className="font-semibold text-blue-900 text-sm">
+          Group items by <span className="font-mono bg-blue-100 px-2 py-0.5 rounded">{groupBy}</span>
+        </h3>
+      </div>
 
-        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          {/* Ungrouped Items */}
-          <div className="mb-8">
-            <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          {/* Ungrouped Items - Takes 2 columns on large screens */}
+          <div className="lg:col-span-2">
+            <h4 className="font-semibold text-gray-700 mb-2 text-sm flex items-center gap-2">
               <span>Items to Group</span>
-              <span className="text-sm bg-gray-200 px-2 py-0.5 rounded-full">
-                {ungroupedCount} remaining
+              <span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">
+                {ungroupedCount}
               </span>
             </h4>
             <DroppableContainer id="ungrouped" items={groups.ungrouped || []}>
               {(groups.ungrouped || []).map((itemId) => {
                 const item = getItemById(itemId)
                 if (!item) return null
-                return <DraggableItem key={itemId} item={item} groupBy={groupBy} />
+                return <DraggableItem key={itemId} item={item} />
               })}
             </DroppableContainer>
           </div>
 
-          {/* Group Buckets */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          {/* Group Buckets - Take remaining columns */}
+          <div className="lg:col-span-2 grid grid-cols-1 gap-4">
             {groupValues.map((groupValue) => (
               <div key={groupValue}>
-                <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <h4 className="font-semibold text-gray-700 mb-2 text-sm flex items-center gap-2">
                   <span className="capitalize">{groupValue}</span>
-                  <span className="text-sm bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
                     {groups[groupValue]?.length || 0}
                   </span>
                 </h4>
@@ -146,33 +143,33 @@ export default function GroupSeparationTask({
                   {(groups[groupValue] || []).map((itemId) => {
                     const item = getItemById(itemId)
                     if (!item) return null
-                    return <DraggableItem key={itemId} item={item} groupBy={groupBy} />
+                    return <DraggableItem key={itemId} item={item} />
                   })}
                 </DroppableContainer>
               </div>
             ))}
           </div>
+        </div>
 
-          <DragOverlay>
-            {activeItem ? <ItemCard item={activeItem} groupBy={groupBy} isDragging /> : null}
-          </DragOverlay>
-        </DndContext>
+        <DragOverlay>
+          {activeItem ? <VisualShape item={activeItem} isDragging /> : null}
+        </DragOverlay>
+      </DndContext>
 
-        {/* Submit Button */}
-        <button
-          onClick={handleSubmit}
-          disabled={isSubmitting || !isComplete}
-          className="w-full py-4 px-6 bg-blue-600 text-white font-semibold text-lg rounded-xl hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors shadow-lg hover:shadow-xl"
-        >
-          {isSubmitting ? 'Submitting...' : isComplete ? 'Submit Grouping' : `Group ${ungroupedCount} more items`}
-        </button>
+      {/* Submit Button */}
+      <button
+        onClick={handleSubmit}
+        disabled={isSubmitting || !isComplete}
+        className="w-full mt-4 py-3 px-6 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors shadow-lg hover:shadow-xl"
+      >
+        {isSubmitting ? 'Submitting...' : isComplete ? 'Submit Grouping' : `Group ${ungroupedCount} more items`}
+      </button>
 
-        {!isComplete && (
-          <p className="text-sm text-amber-600 text-center mt-3">
-            All items must be grouped before submitting
-          </p>
-        )}
-      </div>
+      {!isComplete && (
+        <p className="text-xs text-amber-600 text-center mt-2">
+          All items must be grouped before submitting
+        </p>
+      )}
     </div>
   )
 }
@@ -190,12 +187,14 @@ function DroppableContainer({ id, items, children }: DroppableContainerProps) {
   })
 
   return (
-    <SortableContext id={id} items={items} strategy={verticalListSortingStrategy}>
+    <SortableContext id={id} items={items} strategy={rectSortingStrategy}>
       <div
         ref={setNodeRef}
-        className="min-h-[120px] bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-3 space-y-2"
+        className="min-h-[200px] bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-3"
       >
-        {children}
+        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-6 gap-2">
+          {children}
+        </div>
       </div>
     </SortableContext>
   )
@@ -203,10 +202,9 @@ function DroppableContainer({ id, items, children }: DroppableContainerProps) {
 
 interface DraggableItemProps {
   item: ItemData
-  groupBy: string
 }
 
-function DraggableItem({ item, groupBy }: DraggableItemProps) {
+function DraggableItem({ item }: DraggableItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
   })
@@ -214,76 +212,94 @@ function DraggableItem({ item, groupBy }: DraggableItemProps) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.3 : 1,
   }
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <ItemCard item={item} groupBy={groupBy} isDragging={isDragging} />
+      <VisualShape item={item} isDragging={isDragging} />
     </div>
   )
 }
 
-interface ItemCardProps {
+interface VisualShapeProps {
   item: ItemData
-  groupBy: string
   isDragging?: boolean
 }
 
-function ItemCard({ item, groupBy, isDragging = false }: ItemCardProps) {
-  const groupValue = item.attributes[groupBy]
+function VisualShape({ item, isDragging = false }: VisualShapeProps) {
+  const shape = item.attributes.shape
+  const color = item.attributes.color
+  const size = item.attributes.size
+
+  // Map size to actual pixel dimensions
+  const sizeMap = {
+    small: 32,
+    medium: 48,
+    large: 64,
+  }
+  const dimension = sizeMap[size as keyof typeof sizeMap] || 48
+
+  // Map color names to hex values
+  const colorMap: Record<string, string> = {
+    red: '#EF4444',
+    blue: '#3B82F6',
+    green: '#10B981',
+    yellow: '#F59E0B',
+    purple: '#A855F7',
+    orange: '#F97316',
+    pink: '#EC4899',
+    cyan: '#06B6D4',
+    gray: '#6B7280',
+  }
+  const fillColor = colorMap[color?.toLowerCase()] || color || '#6B7280'
 
   return (
     <div
-      className={`bg-white border-2 rounded-lg p-3 cursor-grab active:cursor-grabbing ${
-        isDragging ? 'border-blue-400 shadow-lg' : 'border-gray-300 hover:border-blue-300'
-      } transition-all`}
+      className={`flex items-center justify-center p-2 rounded-lg cursor-grab active:cursor-grabbing ${
+        isDragging ? 'bg-blue-100 shadow-lg' : 'bg-white hover:bg-gray-50'
+      } transition-all border-2 ${isDragging ? 'border-blue-400' : 'border-transparent'}`}
+      style={{ width: dimension + 16, height: dimension + 16 }}
+      title={`${size} ${color} ${shape}`}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <div className="font-mono text-xs text-gray-500 mb-1">{item.id}</div>
-          <div className="space-y-1">
-            {Object.entries(item.attributes).map(([key, value]) => (
-              <div key={key} className="flex items-center gap-2 text-sm">
-                <span className="text-gray-600 capitalize">{key}:</span>
-                <span
-                  className={`font-semibold capitalize ${
-                    key === groupBy ? 'bg-blue-100 text-blue-700 px-2 py-0.5 rounded' : 'text-gray-900'
-                  }`}
-                >
-                  {value}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Visual indicator for the grouping attribute */}
-        <div className="ml-3">
-          {groupBy === 'color' && (
-            <div
-              className="w-12 h-12 rounded-full border-2 border-gray-300"
-              style={{ backgroundColor: groupValue }}
-            />
-          )}
-          {groupBy === 'shape' && (
-            <div className="w-12 h-12 flex items-center justify-center text-2xl">
-              {groupValue === 'circle' && '○'}
-              {groupValue === 'square' && '□'}
-              {groupValue === 'triangle' && '△'}
-              {groupValue === 'rectangle' && '▭'}
-              {groupValue === 'pentagon' && '⬠'}
-            </div>
-          )}
-          {groupBy === 'size' && (
-            <div className="flex items-center justify-center">
-              {groupValue === 'small' && <div className="w-4 h-4 bg-gray-400 rounded" />}
-              {groupValue === 'medium' && <div className="w-8 h-8 bg-gray-400 rounded" />}
-              {groupValue === 'large' && <div className="w-12 h-12 bg-gray-400 rounded" />}
-            </div>
-          )}
-        </div>
-      </div>
+      <svg width={dimension} height={dimension} viewBox="0 0 100 100">
+        {shape === 'circle' && (
+          <circle cx="50" cy="50" r="45" fill={fillColor} stroke="#1F2937" strokeWidth="2" />
+        )}
+        {shape === 'square' && (
+          <rect x="5" y="5" width="90" height="90" fill={fillColor} stroke="#1F2937" strokeWidth="2" />
+        )}
+        {shape === 'rectangle' && (
+          <rect x="10" y="25" width="80" height="50" fill={fillColor} stroke="#1F2937" strokeWidth="2" />
+        )}
+        {shape === 'triangle' && (
+          <polygon points="50,5 95,90 5,90" fill={fillColor} stroke="#1F2937" strokeWidth="2" />
+        )}
+        {shape === 'pentagon' && (
+          <polygon
+            points="50,5 95,35 80,90 20,90 5,35"
+            fill={fillColor}
+            stroke="#1F2937"
+            strokeWidth="2"
+          />
+        )}
+        {shape === 'hexagon' && (
+          <polygon
+            points="50,5 90,25 90,75 50,95 10,75 10,25"
+            fill={fillColor}
+            stroke="#1F2937"
+            strokeWidth="2"
+          />
+        )}
+        {shape === 'star' && (
+          <polygon
+            points="50,5 61,39 96,39 68,60 79,94 50,73 21,94 32,60 4,39 39,39"
+            fill={fillColor}
+            stroke="#1F2937"
+            strokeWidth="2"
+          />
+        )}
+      </svg>
     </div>
   )
 }
