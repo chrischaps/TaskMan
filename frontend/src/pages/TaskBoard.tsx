@@ -57,9 +57,9 @@ export default function TaskBoard() {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src="/icon.png" alt="TaskMan" className="w-8 h-8" />
-              <h1 className="text-2xl font-bold text-gray-900">TaskMan</h1>
+            <div className="flex items-center gap-4">
+              <img src="/icon.png" alt="TaskMan" className="w-12 h-12" />
+              <h1 className="text-4xl font-bold text-gray-900 tracking-tight">TaskMan</h1>
             </div>
             <div className="flex gap-3">
               <button
