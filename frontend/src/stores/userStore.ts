@@ -10,7 +10,12 @@ export interface User {
   tutorialCompleted: boolean
   taskBoardUnlocked: boolean
   compositeUnlocked: boolean
+  organization?: {
+    id: string
+    name: string
+  } | null
   createdAt: string
+  tasksCompleted?: number
 }
 
 interface UserState {

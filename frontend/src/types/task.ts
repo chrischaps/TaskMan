@@ -15,6 +15,8 @@ export interface Task {
   isOwnTask?: boolean
   acceptedAt?: string
   expiresAt?: string
+  organizationId?: string | null
+  projectId?: string | null
   creator: {
     id?: string
     username: string
