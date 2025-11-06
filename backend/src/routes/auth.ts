@@ -4,6 +4,7 @@ import prisma from '../lib/prisma';
 import { hashPassword, comparePassword } from '../utils/hash';
 import { generateToken } from '../utils/jwt';
 import { authMiddleware } from '../middleware/auth';
+import * as OrganizationService from '../services/organizationService';
 
 const router = Router();
 
@@ -79,12 +80,19 @@ router.post('/register', async (req: Request, res: Response) => {
     // Hash password
     const passwordHash = await hashPassword(password);
 
-    // Create user
+    // Find organization with fewest members for balanced assignment
+    const smallestOrg = await OrganizationService.getSmallestOrganization();
+
+    // Create user (with organization assignment if available)
     const user = await prisma.user.create({
       data: {
         username,
         email,
         passwordHash,
+        organizationId: smallestOrg?.id, // Assign to smallest org (null if no orgs exist)
+      },
+      include: {
+        organization: true, // Include organization data in response
       },
     });
 
@@ -109,6 +117,10 @@ router.post('/register', async (req: Request, res: Response) => {
         tutorialCompleted: user.tutorialCompleted,
         taskBoardUnlocked: user.taskBoardUnlocked,
         compositeUnlocked: user.compositeUnlocked,
+        organization: user.organization ? {
+          id: user.organization.id,
+          name: user.organization.name,
+        } : null,
       },
     });
   } catch (error) {
@@ -147,6 +159,9 @@ router.post('/login', async (req: Request, res: Response) => {
     const user = await prisma.user.findFirst({
       where: {
         OR: [{ email: login }, { username: login }],
+      },
+      include: {
+        organization: true, // Include organization data
       },
     });
 
@@ -190,6 +205,10 @@ router.post('/login', async (req: Request, res: Response) => {
         tutorialCompleted: user.tutorialCompleted,
         taskBoardUnlocked: user.taskBoardUnlocked,
         compositeUnlocked: user.compositeUnlocked,
+        organization: user.organization ? {
+          id: user.organization.id,
+          name: user.organization.name,
+        } : null,
       },
     });
   } catch (error) {
@@ -219,6 +238,9 @@ router.get('/me', authMiddleware, async (req: Request, res: Response) => {
     // Fetch fresh user data from database
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
+      include: {
+        organization: true, // Include organization data
+      },
     });
 
     if (!user) {
@@ -241,6 +263,10 @@ router.get('/me', authMiddleware, async (req: Request, res: Response) => {
         tutorialCompleted: user.tutorialCompleted,
         taskBoardUnlocked: user.taskBoardUnlocked,
         compositeUnlocked: user.compositeUnlocked,
+        organization: user.organization ? {
+          id: user.organization.id,
+          name: user.organization.name,
+        } : null,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },

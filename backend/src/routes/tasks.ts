@@ -207,9 +207,19 @@ router.get(
 
     const skip = (pageNum - 1) * limitNum;
 
+    // Get user's organization
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.userId },
+      select: { organizationId: true },
+    });
+
     // Build where clause
     const where: any = {
       status: 'available',
+      // Filter by organization (only show tasks from user's organization)
+      ...(user?.organizationId ? {
+        organizationId: user.organizationId,
+      } : {}),
       // Conditionally exclude tasks created by current user based on filter
       ...(hideOwnTasks === 'true' ? {
         creatorId: {

@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import prisma from './lib/prisma';
 import authRoutes from './routes/auth';
 import taskRoutes from './routes/tasks';
+import organizationRoutes from './routes/organizations';
+import projectRoutes from './routes/projects';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { TaskExpirationService } from './services/taskExpirationService';
 
@@ -44,6 +46,8 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/organizations', organizationRoutes);
+app.use('/api/projects', projectRoutes);
 
 // Health check / Hello World endpoint
 app.get('/', (_req: Request, res: Response) => {
