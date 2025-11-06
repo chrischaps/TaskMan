@@ -18,7 +18,13 @@
       "Bash(npm create:*)",
       "Bash(npm run dev:*)",
       "Bash(npx tailwindcss init -p)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(mkdir:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx prisma:*)",
+      "Bash(git restore:*)",
+      "Bash(git log:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

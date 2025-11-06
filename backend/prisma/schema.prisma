@@ -11,6 +11,54 @@ datasource db {
 }
 
 // ============================================================================
+// Organization Model
+// ============================================================================
+model Organization {
+  id          String @id @default(uuid()) @db.Uuid
+  name        String @unique @db.VarChar(100)
+  description String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  users User[]
+  tasks Task[]
+
+  @@map("organizations")
+}
+
+// ============================================================================
+// Project Model
+// ============================================================================
+model Project {
+  id          String @id @default(uuid()) @db.Uuid
+  name        String @db.VarChar(255)
+  description String? @db.Text
+
+  // Project status: "draft", "scheduled", "active", "completed"
+  status String @default("draft") @db.VarChar(20)
+
+  // Time tracking
+  scheduledStartTime DateTime? @map("scheduled_start_time")
+  actualStartTime    DateTime? @map("actual_start_time")
+  completedAt        DateTime? @map("completed_at")
+
+  // Task count (for progress tracking)
+  taskCount Int @default(0) @map("task_count")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  tasks Task[]
+
+  @@index([status])
+  @@index([scheduledStartTime])
+  @@map("projects")
+}
+
+// ============================================================================
 // User Model
 // ============================================================================
 model User {
@@ -27,6 +75,10 @@ model User {
   taskBoardUnlocked Boolean @default(false) @map("task_board_unlocked")
   compositeUnlocked Boolean @default(false) @map("composite_unlocked")
 
+  // Organization membership
+  organizationId String?       @map("organization_id") @db.Uuid
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -36,6 +88,7 @@ model User {
   transactions  TokenTransaction[]
   submissions   TaskSubmission[]
 
+  @@index([organizationId])
   @@map("users")
 }
 
@@ -67,6 +120,13 @@ model Task {
   isComposite Boolean @default(false) @map("is_composite")
   isTutorial  Boolean @default(false) @map("is_tutorial")
 
+  // Organization and project membership
+  organizationId String?       @map("organization_id") @db.Uuid
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  projectId String?  @map("project_id") @db.Uuid
+  project   Project? @relation(fields: [projectId], references: [id])
+
   // Relations
   creatorId String @map("creator_id") @db.Uuid
   creator   User   @relation("TaskCreator", fields: [creatorId], references: [id])
@@ -91,6 +151,8 @@ model Task {
   @@index([creatorId])
   @@index([acceptedById])
   @@index([createdAt])
+  @@index([organizationId])
+  @@index([projectId])
   @@map("tasks")
 }
 

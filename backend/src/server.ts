@@ -10,10 +10,34 @@ import { TaskExpirationService } from './services/taskExpirationService';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = parseInt(process.env.PORT || '3001', 10);
 
 // Middleware
-app.use(cors());
+// CORS configuration for local network testing
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+
+    // Allow localhost and local network IPs
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+    ];
+
+    // Allow local network IPs (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+    const localNetworkPattern = /^http:\/\/(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}):5173$/;
+
+    if (allowedOrigins.includes(origin) || localNetworkPattern.test(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -60,8 +84,10 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Start server
-app.listen(PORT, () => {
+// Listen on 0.0.0.0 to accept connections from local network
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 TaskMan API server running on http://localhost:${PORT}`);
+  console.log(`📱 Local network access: http://[YOUR-LOCAL-IP]:${PORT}`);
   console.log(`📊 Health check available at http://localhost:${PORT}/api/health`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 

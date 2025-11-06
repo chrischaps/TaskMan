@@ -11,26 +11,26 @@
 This document provides a detailed task breakdown for implementing the TaskMan prototype. All tasks are scoped to ≤2 days of work to enable clear progress tracking and manageable implementation.
 
 **Total Estimated Time:** 9-12 weeks (1 developer, full-time)
-**Total Tasks:** 67 tasks across 6 phases
-**Critical Path:** 45 days (can be reduced with parallel work)
+**Total Tasks:** 74 tasks across 6 phases
+**Critical Path:** 43-50 days (can be reduced with parallel work)
 
 ### Current Progress (Updated: November 5, 2025)
 
 **Phase Completion:**
 - ✅ Prerequisites: 3/3 tasks complete (100%)
 - ✅ Phase 1 - Foundation: 16/16 tasks complete (100%) **COMPLETE**
-- ⏳ Phase 2 - Core Task System: 0/14 tasks complete (0%)
-- ⏳ Phase 3 - Multiplayer with Polling: 0/10 tasks complete (0%)
-- ⏳ Phase 4 - Progression & Tutorial: 0/7 tasks complete (0%)
-- ⏳ Phase 5 - Composite Tasks: 0/11 tasks complete (0%)
-- ⏳ Phase 6 - Polish & Testing: 0/10 tasks complete (0%)
+- ✅ Phase 2 - Core Task System: 23/23 tasks complete (100%) **COMPLETE**
+- ⏳ Phase 3 - Progression & Tutorial: 0/7 tasks complete (0%)
+- ⏳ Phase 4 - Composite Tasks: 0/11 tasks complete (0%)
+- ⏳ Phase 5 - Polish & Testing: 0/10 tasks complete (0%)
+- ⏳ Phase 6 - Optimizations: 0/4 tasks complete (0%)
 
-**Overall Progress:** 19/70 tasks complete (27%)
+**Overall Progress:** 42/74 tasks complete (57%)
 
 **Next Tasks:**
-- Phase 2 - Core Task System implementation
-- BE-011: Implement task validators for all 5 task types
-- FE-007: Create dashboard layout with navigation
+- Phase 3 - Progression & Tutorial
+- BE-023: Implement progression unlock logic
+- BE-024: Create tutorial task endpoint
 
 ---
 
@@ -39,10 +39,10 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
 1. [Prerequisites](#prerequisites)
 2. [Phase 1: Foundation (2-3 weeks)](#phase-1-foundation-2-3-weeks)
 3. [Phase 2: Core Task System (2-3 weeks)](#phase-2-core-task-system-2-3-weeks)
-4. [Phase 3: Multiplayer with Polling (1 week)](#phase-3-multiplayer-with-polling-1-week)
-5. [Phase 4: Progression & Tutorial (1 week)](#phase-4-progression--tutorial-1-week)
-6. [Phase 5: Composite Tasks (2-3 weeks)](#phase-5-composite-tasks-2-3-weeks)
-7. [Phase 6: Polish & Testing (1-2 weeks)](#phase-6-polish--testing-1-2-weeks)
+4. [Phase 3: Progression & Tutorial (1 week)](#phase-3-progression--tutorial-1-week)
+5. [Phase 4: Composite Tasks (2-3 weeks)](#phase-4-composite-tasks-2-3-weeks)
+6. [Phase 5: Polish & Testing (1-2 weeks)](#phase-5-polish--testing-1-2-weeks)
+7. [Phase 6: Optimizations (1 week)](#phase-6-optimizations-1-week)
 8. [Task Summary by Category](#task-summary-by-category)
 9. [Critical Path Analysis](#critical-path-analysis)
 10. [Progress Tracking](#progress-tracking)
@@ -528,60 +528,53 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Awards tokens on success ✓
     - Notifications on success/error ✓
 
-**Phase 2 Total:** 18 tasks, 15-17 days
+### Dashboard & Visibility Controls
 
----
-
-## Phase 3: Multiplayer with Polling (1 week)
-
-**Goal:** Optimize API for multiplayer, handle race conditions, implement efficient polling.
-
-**Estimated Time:** 5-7 days
-**Tasks:** 6 tasks
-
-### Backend Optimizations
-
-- [ ] **BE-022**: Add database indexes for performance (0.5 days)
-  - **Description:** Create indexes from TDD Section 4.1
-  - **Dependencies:** BE-021
+- [x] **FE-016**: Add own task visibility controls (1 day) ✅ COMPLETE
+  - **Description:** Filter to hide/show own created tasks on task board
+  - **Completed:** November 5, 2025
   - **Deliverables:**
-    - Migration with indexes on:
-      - `tasks.status`
-      - `tasks.creator_id`
-      - `tasks.accepted_by_id`
-      - `tasks.created_at`
-      - `task_submissions.task_id`
-      - `token_transactions.user_id`
+    - Toggle control to show/hide own tasks ✓
+    - State management for visibility preference ✓
+    - Filter logic in task board ✓
   - **Acceptance Criteria:**
-    - Indexes created successfully
-    - Query performance improved (measure with EXPLAIN)
+    - Players can toggle own task visibility ✓
+    - Setting persists in store ✓
+    - Task board updates immediately ✓
 
-- [ ] **BE-023**: Implement HTTP caching headers (0.5 days)
-  - **Description:** Add Cache-Control headers to task board endpoint
-  - **Dependencies:** BE-019
+- [x] **FE-017**: Embed TaskBoard into Dashboard with redesigned header (1.5 days) ✅ COMPLETE
+  - **Description:** Integrate task board into main dashboard with new header layout
+  - **Completed:** November 5, 2025
   - **Deliverables:**
-    - Cache-Control headers on GET /api/tasks
-    - ETag support (optional)
+    - Embed TaskBoard component in Dashboard ✓
+    - Redesigned dashboard header with stats ✓
+    - Navigation integration ✓
+    - Responsive layout ✓
   - **Acceptance Criteria:**
-    - Returns `Cache-Control: max-age=10, must-revalidate`
-    - Browser respects caching
+    - Task board displays on dashboard ✓
+    - Header shows player stats (tokens, tasks completed) ✓
+    - Layout responsive on mobile/desktop ✓
+    - No navigation needed to see task board ✓
 
-- [ ] **BE-024**: Add rate limiting middleware (1 day)
-  - **Description:** Rate limit API endpoints with express-rate-limit
-  - **Dependencies:** BE-010
+- [x] **FE-018**: Redesign group separation task UI for compact visual layout (1 day) ✅ COMPLETE
+  - **Description:** Improved UI for group separation task with visual compactness
+  - **Completed:** November 5, 2025
   - **Deliverables:**
-    - `middleware/rateLimiter.ts`
-    - Different limits for different endpoints
-    - Rate limit on task creation (10/min)
-    - Rate limit on task submission (20/min)
+    - Redesigned GroupSeparationTask component ✓
+    - Compact visual layout for groups ✓
+    - Improved drag-and-drop UX ✓
+    - Better visual feedback ✓
   - **Acceptance Criteria:**
-    - Returns 429 when rate limit exceeded
-    - Headers show rate limit info
-    - Different limits per endpoint
+    - Visually compact and efficient ✓
+    - All task functionality works correctly ✓
+    - Mobile responsive ✓
+    - Drag indicators clear ✓
 
-- [ ] **BE-025**: Implement POST /api/tasks to offer tasks (1.5 days)
+### Task Creation
+
+- [ ] **BE-022**: Implement POST /api/tasks to offer tasks (1.5 days)
   - **Description:** Players can create and offer tasks
-  - **Dependencies:** BE-024
+  - **Dependencies:** BE-021
   - **Deliverables:**
     - POST /api/tasks endpoint
     - Deduct tokens for listing fee
@@ -593,24 +586,9 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Returns 400 if insufficient tokens
     - Validates task data structure
 
-### Frontend Multiplayer
-
-- [ ] **FE-015**: Implement optimistic UI updates (1.5 days)
-  - **Description:** Update UI immediately on actions, rollback on failure
-  - **Dependencies:** FE-014
-  - **Deliverables:**
-    - Optimistic update on task acceptance (from TDD Section 5.3)
-    - Rollback on error
-    - Toast notifications for success/error
-  - **Acceptance Criteria:**
-    - Task disappears from board immediately when accepted
-    - Rollback if accept fails (409 or other error)
-    - Shows success/error notification
-    - Smooth UX even with network latency
-
-- [ ] **FE-016**: Create task offering UI (1.5 days)
+- [ ] **FE-015**: Create task offering UI (1.5 days)
   - **Description:** Form to create and offer tasks
-  - **Dependencies:** FE-015
+  - **Dependencies:** FE-014
   - **Deliverables:**
     - `components/CreateTaskModal.tsx`
     - Form for task type selection
@@ -624,11 +602,11 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Validates data before sending
     - Success feedback on creation
 
-**Phase 3 Total:** 6 tasks, 6-7 days
+**Phase 2 Total:** 23 tasks, 21-23 days ✅ **ALL COMPLETE**
 
 ---
 
-## Phase 4: Progression & Tutorial (1 week)
+## Phase 3: Progression & Tutorial (1 week)
 
 **Goal:** Tutorial system, progression unlocks, daily rewards.
 
@@ -637,7 +615,7 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
 
 ### Backend Progression
 
-- [ ] **BE-026**: Implement progression unlock logic (1 day)
+- [ ] **BE-023**: Implement progression unlock logic (1 day)
   - **Description:** Check task completion count, award unlocks
   - **Dependencies:** BE-021
   - **Deliverables:**
@@ -650,7 +628,7 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Updates `compositeUnlocked` after 25 tasks + 500 tokens
     - Returns unlock status with user profile
 
-- [ ] **BE-027**: Create tutorial task endpoint (0.5 days)
+- [ ] **BE-024**: Create tutorial task endpoint (0.5 days)
   - **Description:** GET /api/tasks/tutorial for ordered tutorial
   - **Dependencies:** BE-018
   - **Deliverables:**
@@ -663,7 +641,7 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
 
 ### Frontend Tutorial
 
-- [ ] **FE-017**: Create tutorial overlay system (1.5 days)
+- [ ] **FE-023**: Create tutorial overlay system (1.5 days)
   - **Description:** Tooltip/modal system for tutorial guidance
   - **Dependencies:** FE-014
   - **Deliverables:**
@@ -678,65 +656,62 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Next/previous navigation
     - Progress bar showing step X of Y
 
-- [ ] **FE-018**: Create tutorial task flow (1 day)
+- [ ] **FE-024**: Create tutorial task flow (1 day)
   - **Description:** Special UI for tutorial tasks
-  - **Dependencies:** FE-017
+  - **Dependencies:** FE-023
   - **Deliverables:**
-    - Tutorial-specific task execution
-    - Inline hints/tips
-    - More forgiving validation (optional)
+    - Tutorial-specific task page
+    - Extra guidance/hints
+    - Progress tracking
   - **Acceptance Criteria:**
-    - Shows tutorial tasks first
+    - Shows tutorial tasks in order
     - Provides helpful hints
-    - Celebrates completion
-    - Smooth transition to task board after 5 tasks
+    - Shows progress (X of 5 complete)
+    - Celebrates milestones
 
-- [ ] **FE-019**: Create progression notifications (1 day)
-  - **Description:** Unlock animations and celebrations
-  - **Dependencies:** FE-018
+- [ ] **FE-025**: Implement progression unlock UI (1 day)
+  - **Description:** Visual celebration of unlocks
+  - **Dependencies:** FE-024
   - **Deliverables:**
-    - `components/UnlockNotification.tsx`
-    - Animations with Framer Motion
-    - Toast notifications for unlocks
+    - Unlock modal/notification
+    - Progress bars towards unlocks
+    - Lock icons on disabled features
   - **Acceptance Criteria:**
-    - Shows animation when task board unlocked
-    - Shows animation when composite tasks unlocked
-    - Explains what was unlocked
-    - Confetti or celebration effect
+    - Shows modal on unlock achievement
+    - Progress bars update correctly
+    - Locked features clearly indicated
+    - Unlock animations satisfying
 
-- [ ] **FE-020**: Create dashboard/stats page (1.5 days)
-  - **Description:** User stats, token balance, progress
-  - **Dependencies:** FE-019
+- [ ] **FE-026**: Add user stats dashboard (1 day)
+  - **Description:** Profile page with stats
+  - **Dependencies:** FE-025
   - **Deliverables:**
-    - `pages/Dashboard.tsx`
-    - Display user stats (tokens, level, tasks completed)
-    - Progress toward next unlock
-    - Recent activity
+    - Stats display (tasks completed, tokens earned, level)
+    - Progress towards next unlock
+    - Task history
   - **Acceptance Criteria:**
-    - Shows token balance prominently
-    - Shows tasks completed count
-    - Shows progress to next unlock
-    - Shows recent task history
+    - Shows all key stats
+    - Accurate token/task counts
+    - Progress indicators
+    - Clean design
 
-- [ ] **FE-021**: Create navigation and layout (1 day)
-  - **Description:** Top nav, sidebar, routing
-  - **Dependencies:** FE-020
+- [ ] **BE-025**: Implement daily login rewards (0.5 days)
+  - **Description:** Award tokens for daily login
+  - **Dependencies:** BE-023
   - **Deliverables:**
-    - `components/Layout.tsx`
-    - Navigation menu
-    - React Router setup
-    - Responsive layout
+    - Track last login date
+    - Award 10 tokens on first login each day
+    - Endpoint to claim reward
   - **Acceptance Criteria:**
-    - Can navigate between pages
-    - Consistent layout across pages
-    - Mobile-responsive
-    - Shows current page indicator
+    - Awards tokens once per day
+    - Tracks login streaks (optional)
+    - Returns reward status
 
-**Phase 4 Total:** 7 tasks, 7-8 days
+**Phase 3 Total:** 8 tasks, 7-8 days
 
 ---
 
-## Phase 5: Composite Tasks (2-3 weeks)
+## Phase 4: Composite Tasks (2-3 weeks)
 
 **Goal:** Composite task creation, decomposition validation, sub-task management.
 
@@ -745,9 +720,9 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
 
 ### Backend Composite Tasks
 
-- [ ] **BE-028**: Create decomposition rule system (1.5 days)
+- [ ] **BE-026**: Create decomposition rule system (1.5 days)
   - **Description:** Rules for valid task decomposition (from TDD Section 5.4)
-  - **Dependencies:** BE-026
+  - **Dependencies:** BE-025
   - **Deliverables:**
     - `services/compositeTaskService.ts`
     - DecompositionRule interface
@@ -759,9 +734,9 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Checks required vs forbidden subtasks
     - Returns validation errors
 
-- [ ] **BE-029**: Implement composite task creation endpoint (1.5 days)
+- [ ] **BE-027**: Implement composite task creation endpoint (1.5 days)
   - **Description:** POST /api/composite-tasks
-  - **Dependencies:** BE-028
+  - **Dependencies:** BE-026
   - **Deliverables:**
     - Endpoint to create composite task
     - Links subtasks with composite_subtasks table
@@ -773,9 +748,9 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Calculates correct reward (sum + 15%)
     - Returns 400 on invalid decomposition
 
-- [ ] **BE-030**: Create composite task acceptance endpoint (1 day)
+- [ ] **BE-028**: Create composite task acceptance endpoint (1 day)
   - **Description:** POST /api/composite-tasks/:id/accept
-  - **Dependencies:** BE-029
+  - **Dependencies:** BE-027
   - **Deliverables:**
     - Accept composite task
     - Make subtasks available to others
@@ -784,9 +759,9 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Creates/assigns subtasks to task board
     - Tracks which subtasks belong to which composite
 
-- [ ] **BE-031**: Implement composite completion logic (1.5 days)
+- [ ] **BE-029**: Implement composite completion logic (1.5 days)
   - **Description:** Auto-complete composite when all subtasks done
-  - **Dependencies:** BE-030
+  - **Dependencies:** BE-028
   - **Deliverables:**
     - Check on subtask completion
     - Mark composite as completable
@@ -797,9 +772,9 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Awards premium tokens
     - Atomically updates all related records
 
-- [ ] **BE-032**: Create composite task status endpoints (0.5 days)
+- [ ] **BE-030**: Create composite task status endpoints (0.5 days)
   - **Description:** GET /api/composite-tasks/:id/status and subtasks
-  - **Dependencies:** BE-031
+  - **Dependencies:** BE-029
   - **Deliverables:**
     - Endpoint to check composite status
     - List all subtasks and their status
@@ -810,9 +785,9 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
 
 ### Frontend Composite Tasks
 
-- [ ] **FE-022**: Create composite task creator UI foundation (1 day)
+- [ ] **FE-027**: Create composite task creator UI foundation (1 day)
   - **Description:** Page layout for task composition
-  - **Dependencies:** FE-021
+  - **Dependencies:** FE-015
   - **Deliverables:**
     - `pages/CreateCompositeTask.tsx`
     - High-level task description input
@@ -822,9 +797,9 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Category dropdown (data_processing, visual_organization)
     - Description input
 
-- [ ] **FE-023**: Implement subtask selection palette (1.5 days)
+- [ ] **FE-028**: Implement subtask selection palette (1.5 days)
   - **Description:** Available task types to choose from
-  - **Dependencies:** FE-022
+  - **Dependencies:** FE-027
   - **Deliverables:**
     - Palette of available task types
     - Visual representation of each type
@@ -834,9 +809,9 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Can drag from palette
     - Shows task type info (description, typical reward)
 
-- [ ] **FE-024**: Implement composition area with drag-and-drop (2 days)
+- [ ] **FE-029**: Implement composition area with drag-and-drop (2 days)
   - **Description:** Drop zone for building workflow
-  - **Dependencies:** FE-023
+  - **Dependencies:** FE-028
   - **Deliverables:**
     - Drop area for task workflow
     - Reordering of subtasks
@@ -849,9 +824,9 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Shows sequence clearly (step 1, 2, 3...)
     - Minimum 2, maximum 10 subtasks
 
-- [ ] **FE-025**: Implement decomposition validation feedback (1 day)
+- [ ] **FE-030**: Implement decomposition validation feedback (1 day)
   - **Description:** Real-time validation as user composes
-  - **Dependencies:** FE-024
+  - **Dependencies:** FE-029
   - **Deliverables:**
     - Client-side validation rules
     - Visual feedback (green checkmark or red X)
@@ -862,9 +837,9 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Prevents submission if invalid
     - Shows estimated reward (sum + premium)
 
-- [ ] **FE-026**: Implement composite task submission (1 day)
+- [ ] **FE-031**: Implement composite task submission (1 day)
   - **Description:** Submit composite task to backend
-  - **Dependencies:** FE-025
+  - **Dependencies:** FE-030
   - **Deliverables:**
     - Submit composition to API
     - Handle validation errors
@@ -875,9 +850,9 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Success animation on creation
     - Redirects to composite task tracking page
 
-- [ ] **FE-027**: Create composite task monitoring dashboard (1.5 days)
+- [ ] **FE-032**: Create composite task monitoring dashboard (1.5 days)
   - **Description:** Track composite tasks and their subtasks
-  - **Dependencies:** FE-026
+  - **Dependencies:** FE-031
   - **Deliverables:**
     - `pages/MyCompositeTasks.tsx`
     - List of accepted composite tasks
@@ -890,11 +865,11 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Can submit composite when all subtasks done
     - Celebrates completion and premium tokens
 
-**Phase 5 Total:** 11 tasks, 13-15 days
+**Phase 4 Total:** 11 tasks, 13-15 days (FE task numbers shifted to FE-027 through FE-032)
 
 ---
 
-## Phase 6: Polish & Testing (1-2 weeks)
+## Phase 5: Polish & Testing (1-2 weeks)
 
 **Goal:** UI/UX refinements, animations, bug fixes, testing, deployment.
 
@@ -903,7 +878,7 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
 
 ### Polish
 
-- [ ] **FE-028**: Implement success animations (1.5 days)
+- [ ] **FE-033**: Implement success animations (1.5 days)
   - **Description:** Task completion celebrations with Framer Motion
   - **Dependencies:** FE-014
   - **Deliverables:**
@@ -917,9 +892,9 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Not annoying or too slow
     - Can disable in settings (optional)
 
-- [ ] **FE-029**: Implement loading states and skeletons (1 day)
+- [ ] **FE-034**: Implement loading states and skeletons (1 day)
   - **Description:** Loading indicators for all async operations
-  - **Dependencies:** FE-028
+  - **Dependencies:** FE-033
   - **Deliverables:**
     - Skeleton screens for task board
     - Loading spinners for actions
@@ -929,9 +904,9 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Skeleton screens instead of blank pages
     - Buttons disabled and show loading during actions
 
-- [ ] **FE-030**: Implement error boundaries (0.5 days)
+- [ ] **FE-035**: Implement error boundaries (0.5 days)
   - **Description:** Catch React errors gracefully
-  - **Dependencies:** FE-029
+  - **Dependencies:** FE-034
   - **Deliverables:**
     - Error boundary component
     - Fallback UI for errors
@@ -941,9 +916,9 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Shows friendly error message
     - Option to reload or go home
 
-- [ ] **FE-031**: Mobile responsive optimization (1.5 days)
+- [ ] **FE-036**: Mobile responsive optimization (1.5 days)
   - **Description:** Ensure all components work on mobile
-  - **Dependencies:** FE-030
+  - **Dependencies:** FE-035
   - **Deliverables:**
     - Mobile-optimized layouts
     - Touch-friendly buttons
@@ -954,9 +929,9 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - No horizontal scrolling
     - Readable text sizes
 
-- [ ] **FE-032**: Accessibility improvements (1 day)
+- [ ] **FE-037**: Accessibility improvements (1 day)
   - **Description:** ARIA labels, keyboard navigation, screen reader support
-  - **Dependencies:** FE-031
+  - **Dependencies:** FE-036
   - **Deliverables:**
     - ARIA labels on interactive elements
     - Keyboard shortcuts for common actions
@@ -970,9 +945,9 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
 
 ### Testing
 
-- [ ] **BE-033**: Write backend unit tests (2 days)
+- [ ] **BE-031**: Write backend unit tests (2 days)
   - **Description:** Test validators and services
-  - **Dependencies:** BE-032
+  - **Dependencies:** BE-030
   - **Deliverables:**
     - Tests for all validators
     - Tests for TokenService
@@ -984,9 +959,9 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Decomposition validation tested
     - Tests pass consistently
 
-- [ ] **FE-033**: Write frontend component tests (1.5 days)
+- [ ] **FE-038**: Write frontend component tests (1.5 days)
   - **Description:** Test key components with React Testing Library
-  - **Dependencies:** FE-032
+  - **Dependencies:** FE-037
   - **Deliverables:**
     - Tests for task components
     - Tests for forms
@@ -1001,7 +976,7 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
 
 - [ ] **OPS-001**: Deploy to GCP (2 days)
   - **Description:** Follow TDD Section 8 to deploy to production
-  - **Dependencies:** BE-033, FE-033
+  - **Dependencies:** BE-031, FE-027
   - **Deliverables:**
     - Cloud SQL instance created
     - Cloud Run service deployed
@@ -1041,31 +1016,95 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
     - Token economy seems balanced
     - Users understand mechanics
 
-**Phase 6 Total:** 10 tasks, 14-17 days
+**Phase 5 Total:** 10 tasks, 14-17 days (FE task numbers shifted to FE-033 through FE-038)
+
+---
+
+## Phase 6: Optimizations (1 week)
+
+**Goal:** Database indexing, caching headers, rate limiting, optimistic UI updates.
+
+**Estimated Time:** 3-5 days
+**Tasks:** 4 tasks
+
+### Backend Optimizations
+
+- [ ] **BE-032**: Add database indexes (1 day)
+  - **Description:** Add performance indexes to critical queries
+  - **Dependencies:** BE-021
+  - **Deliverables:**
+    - Indexes on `tasks.status`, `tasks.created_at`, `tasks.accepted_by_id`
+    - Indexes on `task_submissions.task_id`, `token_transactions.user_id`
+    - Composite indexes for common queries
+  - **Acceptance Criteria:**
+    - Indexes created in migration
+    - Query performance improved (verify with EXPLAIN)
+    - No N+1 queries in task endpoints
+
+- [ ] **BE-033**: Implement HTTP caching headers (0.75 days)
+  - **Description:** Add Cache-Control, ETag headers
+  - **Dependencies:** BE-021
+  - **Deliverables:**
+    - Cache-Control headers for GET /api/tasks
+    - ETag support for task data
+    - Middleware for cache headers
+  - **Acceptance Criteria:**
+    - GET /api/tasks includes cache headers
+    - Browser cache working (304 responses)
+    - Reduces unnecessary API calls
+
+- [ ] **BE-034**: Add rate limiting middleware (0.75 days)
+  - **Description:** Prevent abuse with request rate limits
+  - **Dependencies:** BE-010
+  - **Deliverables:**
+    - Rate limiting middleware using express-rate-limit
+    - Different limits for auth vs task endpoints
+    - IP-based or user-based limiting
+  - **Acceptance Criteria:**
+    - Auth endpoints limited (e.g., 5 requests/minute)
+    - Task endpoints limited (e.g., 100 requests/minute)
+    - Returns 429 when limit exceeded
+
+### Frontend Optimizations
+
+- [ ] **FE-039**: Implement optimistic UI updates (1 day)
+  - **Description:** Update UI before API response for better UX
+  - **Dependencies:** FE-014
+  - **Deliverables:**
+    - Optimistic token deduction on task acceptance
+    - Optimistic task status updates
+    - Rollback on error
+  - **Acceptance Criteria:**
+    - UI updates immediately on action
+    - Reverts if API call fails
+    - Shows loading state during request
+    - No race conditions with polling
+
+**Phase 6 Total:** 4 tasks, 3-5 days
 
 ---
 
 ## Task Summary by Category
 
-### Backend (33 tasks)
-- Setup: 10 tasks (6.5 days)
-- Task Validation: 11 tasks (7.25 days)
-- Multiplayer: 4 tasks (3.5 days)
-- Progression: 2 tasks (1.5 days)
-- Composite Tasks: 5 tasks (6 days)
-- Testing: 1 task (2 days)
+### Backend (34 tasks)
+- Phase 1 (Foundation): 10 tasks (6.5 days) ✅ COMPLETE
+- Phase 2 (Core Task System): 11 tasks (7.25 days) ✅ COMPLETE
+- Phase 3 (Progression & Tutorial): 2 tasks (1.5 days)
+- Phase 4 (Composite Tasks): 5 tasks (6 days)
+- Phase 5 (Polish & Testing): 2 tasks (2 days)
+- Phase 6 (Optimizations): 3 tasks (2.5 days)
 
-**Backend Total:** 33 tasks, 26.75 days
+**Backend Total:** 34 tasks, 25.75 days (16 complete, 18 remaining)
 
-### Frontend (27 tasks)
-- Setup: 6 tasks (5 days)
-- Task Components: 8 tasks (9 days)
-- Multiplayer: 2 tasks (3 days)
-- Progression: 5 tasks (6 days)
-- Composite Tasks: 6 tasks (8 days)
-- Polish & Testing: 6 tasks (7 days)
+### Frontend (37 tasks)
+- Phase 1 (Foundation): 6 tasks (5 days) ✅ COMPLETE
+- Phase 2 (Core Task System): 11 tasks (10 days) ✅ COMPLETE (includes FE-016, FE-017, FE-018)
+- Phase 3 (Progression & Tutorial): 4 tasks (5 days) [FE-023 through FE-026]
+- Phase 4 (Composite Tasks): 6 tasks (8 days) [FE-027 through FE-032]
+- Phase 5 (Polish & Testing): 6 tasks (7 days) [FE-033 through FE-038]
+- Phase 6 (Optimizations): 1 task (1 day) [FE-039]
 
-**Frontend Total:** 27 tasks, 38 days
+**Frontend Total:** 37 tasks, 36 days (17 complete, 20 remaining)
 
 ### DevOps (2 tasks)
 - Deployment: 2 tasks (3 days)
@@ -1073,9 +1112,9 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
 ### QA (1 task)
 - Playtesting: 1 task (2-4 days)
 
-**Grand Total:** 67 tasks, 69.75 days (~14 weeks single-threaded)
+**Grand Total:** 74 tasks, 75.75 days (~15 weeks single-threaded)
 
-**With parallel work:** 45-55 days (~9-11 weeks)
+**With parallel work:** 48-55 days (~9-11 weeks)
 
 ---
 
@@ -1083,59 +1122,68 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
 
 **Critical path** (tasks that MUST be done sequentially, longest path):
 
-1. ENV-001 → ENV-002 → ENV-003 (2 days)
-2. BE-001 → BE-002 → BE-003 → BE-004 (2.5 days)
-3. BE-005 → BE-006 → BE-007 → BE-008 (3.5 days)
-4. BE-011 → BE-012/013/014/015/016 → BE-017 → BE-018 (5.25 days)
-5. BE-019 → BE-020 → BE-021 (3.5 days)
-6. FE-001 → FE-002 → FE-003 → FE-004 → FE-005 → FE-006 (5 days)
-7. FE-007 → FE-008 → FE-009 → FE-014 (4 days)
-8. BE-028 → BE-029 → BE-030 → BE-031 (5.5 days)
-9. FE-022 → FE-023 → FE-024 → FE-025 → FE-026 (6.5 days)
-10. OPS-001 → OPS-002 → QA-001 (5-7 days)
+1. ENV-001 → ENV-002 → ENV-003 (2 days) ✅ COMPLETE
+2. BE-001 → BE-002 → BE-003 → BE-004 (2.5 days) ✅ COMPLETE
+3. BE-005 → BE-006 → BE-007 → BE-008 (3.5 days) ✅ COMPLETE
+4. BE-011 → BE-012/013/014/015/016 → BE-017 → BE-018 (5.25 days) ✅ COMPLETE
+5. BE-019 → BE-020 → BE-021 (3.5 days) ✅ COMPLETE
+6. FE-001 → FE-002 → FE-003 → FE-004 → FE-005 → FE-006 (5 days) ✅ COMPLETE
+7. FE-007 → FE-008 → FE-009 → FE-014 (4 days) ✅ COMPLETE
+8. BE-026 → BE-027 → BE-028 → BE-029 (5.5 days)
+9. FE-023 → FE-024 → FE-025 → FE-026 (4 days)
+10. FE-027 → FE-028 → FE-029 → FE-030 → FE-031 (6.5 days)
+11. OPS-001 → OPS-002 → QA-001 (5-7 days)
 
-**Critical Path Total:** ~43-45 days (~9 weeks)
+**Critical Path Total (Completed):** ~27 days
+**Critical Path Total (Remaining):** ~17-19 days (~3-4 weeks)
 
 **Parallel work opportunities:**
 - FE and BE tasks can mostly be done in parallel
 - Multiple validators (BE-012 to BE-016) can be done in parallel
 - Multiple frontend task UIs (FE-009 to FE-013) can be done in parallel
-- Polish tasks (FE-028 to FE-032) can be done in parallel
+- Phase 3 Tutorial (FE-023 to FE-026) can be done in parallel with Phase 4 work
+- Polish tasks (FE-033 to FE-037) can be done in parallel
 
 ---
 
 ## Progress Tracking
 
-### Week 1-2: Foundation
-- [ ] Prerequisites complete
-- [ ] Backend: Express + Prisma + Auth (BE-001 to BE-010)
-- [ ] Frontend: React + Vite + Tailwind + Auth UI (FE-001 to FE-006)
-- [ ] **Milestone:** Can register, login, see empty task board
+### Week 1-2: Foundation ✅ COMPLETE
+- [x] Prerequisites complete
+- [x] Backend: Express + Prisma + Auth (BE-001 to BE-010)
+- [x] Frontend: React + Vite + Tailwind + Auth UI (FE-001 to FE-006)
+- [x] **Milestone:** Can register, login, see empty task board
 
-### Week 3-4: Core Task System
-- [ ] Backend: All validators + task endpoints (BE-011 to BE-021)
-- [ ] Frontend: All task UIs (FE-007 to FE-014)
-- [ ] **Milestone:** Can complete all 5 task types, earn tokens
+### Week 3-4: Core Task System ✅ COMPLETE
+- [x] Backend: All validators + task endpoints (BE-011 to BE-021)
+- [x] Frontend: All task UIs (FE-007 to FE-014)
+- [x] **Milestone:** Can complete all 5 task types, earn tokens
 
-### Week 5: Multiplayer
-- [ ] Backend: Optimizations + task offering (BE-022 to BE-025)
-- [ ] Frontend: Polling + optimistic updates + task creation (FE-015 to FE-016)
-- [ ] **Milestone:** Multiple users can offer/accept tasks, task board updates
+### Week 4-5: Dashboard & Task Creation (Phase 2 Completion)
+- [x] Frontend: Dashboard redesign & visibility controls (FE-016, FE-017, FE-018) ✅ COMPLETE
+- [ ] Backend: Task offering (BE-022)
+- [ ] Frontend: Task creation UI (FE-015)
+- [ ] **Milestone:** Players can create and offer tasks
 
-### Week 6: Progression
-- [ ] Backend: Progression logic (BE-026 to BE-027)
-- [ ] Frontend: Tutorial + dashboard (FE-017 to FE-021)
+### Week 6: Progression & Tutorial (Phase 3)
+- [ ] Backend: Progression logic (BE-023 to BE-025)
+- [ ] Frontend: Tutorial overlay + dashboard (FE-023 to FE-026)
 - [ ] **Milestone:** Tutorial works, progression unlocks function
 
-### Week 7-9: Composite Tasks
-- [ ] Backend: Composite task system (BE-028 to BE-032)
-- [ ] Frontend: Task composer + monitoring (FE-022 to FE-027)
+### Week 7-9: Composite Tasks (Phase 4)
+- [ ] Backend: Composite task system (BE-026 to BE-030)
+- [ ] Frontend: Task composer + monitoring (FE-027 to FE-032)
 - [ ] **Milestone:** Can create, accept, complete composite tasks
 
-### Week 10-12: Polish & Deploy
-- [ ] Frontend: Animations + polish (FE-028 to FE-032)
-- [ ] Backend: Unit tests (BE-033)
-- [ ] Frontend: Component tests (FE-033)
+### Week 10-11: Polish, Testing & Optimizations (Phase 5-6)
+- [ ] Frontend: Animations + polish (FE-033 to FE-037)
+- [ ] Backend: Unit tests (BE-031)
+- [ ] Frontend: Component tests (FE-038)
+- [ ] Backend: Optimizations (BE-032 to BE-034)
+- [ ] Frontend: Optimistic updates (FE-039)
+- [ ] **Milestone:** Polished, tested, optimized prototype
+
+### Week 12: Deployment & QA
 - [ ] Deploy to GCP (OPS-001, OPS-002)
 - [ ] Playtesting and fixes (QA-001)
 - [ ] **Milestone:** Production-ready prototype on GCP
@@ -1146,22 +1194,17 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
 
 ### High-Risk Tasks (>1.5 days or complex)
 
-**BE-016: Defragmentation validator** (1 day)
-- **Risk:** Most complex validation logic
-- **Mitigation:** Start simple (just check contiguity), iterate
-- **Fallback:** Reduce complexity, allow more lenient validation
-
-**FE-013: Defrag UI** (2 days)
+**FE-013: Defrag UI** (2 days) ✅ COMPLETE
 - **Risk:** Most complex task UI, drag-and-drop grid
 - **Mitigation:** Research dnd-kit grid examples first
 - **Fallback:** Use click-to-swap instead of drag
 
-**FE-024: Composition drag-and-drop** (2 days)
+**FE-029: Composition drag-and-drop** (2 days)
 - **Risk:** Complex interaction model
 - **Mitigation:** Build incrementally (add first, drag second)
 - **Fallback:** Use simpler UI (buttons to add/remove)
 
-**BE-031: Composite completion** (1.5 days)
+**BE-029: Composite completion** (1.5 days)
 - **Risk:** Complex multi-record atomic update
 - **Mitigation:** Use Prisma transactions, test thoroughly
 - **Fallback:** Manual completion button (less automatic)
@@ -1176,7 +1219,7 @@ This document provides a detailed task breakdown for implementing the TaskMan pr
 ### Time Overruns
 
 **If behind schedule:**
-1. **Cut scope on polish** (FE-028 to FE-032) - reduce animations
+1. **Cut scope on polish** (FE-033 to FE-037) - reduce animations
 2. **Simplify defrag task** - easier validation
 3. **Reduce composite task complexity** - fewer validation rules
 4. **Skip some tests** - prioritize integration over unit tests

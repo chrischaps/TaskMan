@@ -12,10 +12,46 @@ async function main() {
   console.log('🌱 Starting database seed...\n');
 
   // =========================================================================
+  // Create Organizations
+  // =========================================================================
+
+  console.log('Creating organizations...');
+
+  const organizations = [
+    {
+      name: 'Team Alpha',
+      description: 'The first organization competing for project completion',
+    },
+    {
+      name: 'Team Beta',
+      description: 'The second organization competing for project completion',
+    },
+  ];
+
+  const createdOrgs = [];
+
+  for (const orgData of organizations) {
+    let org = await prisma.organization.findUnique({
+      where: { name: orgData.name },
+    });
+
+    if (!org) {
+      org = await prisma.organization.create({
+        data: orgData,
+      });
+      console.log(`✅ Organization created: ${org.name}`);
+    } else {
+      console.log(`✅ Organization already exists: ${org.name}`);
+    }
+
+    createdOrgs.push(org);
+  }
+
+  // =========================================================================
   // Create System User for Tutorial Tasks
   // =========================================================================
 
-  console.log('Creating system user...');
+  console.log('\nCreating system user...');
 
   // Check if system user already exists
   let systemUser = await prisma.user.findUnique({
@@ -45,10 +81,10 @@ async function main() {
   }
 
   // =========================================================================
-  // Create Test Users
+  // Create Test Users and Assign to Organizations
   // =========================================================================
 
-  console.log('\nCreating test users...');
+  console.log('\nCreating test users and assigning to organizations...');
 
   const testUsers = [
     { username: 'alice', email: 'alice@test.com', password: 'password123' },
@@ -56,10 +92,14 @@ async function main() {
     { username: 'charlie', email: 'charlie@test.com', password: 'password123' },
   ];
 
-  for (const testUserData of testUsers) {
+  for (let i = 0; i < testUsers.length; i++) {
+    const testUserData = testUsers[i];
     let testUser = await prisma.user.findUnique({
       where: { username: testUserData.username },
     });
+
+    // Assign users to organizations in round-robin fashion
+    const assignedOrg = createdOrgs[i % createdOrgs.length];
 
     if (!testUser) {
       const hashedPassword = await hashPassword(testUserData.password);
@@ -75,12 +115,22 @@ async function main() {
           tutorialCompleted: false,
           taskBoardUnlocked: true, // Unlock task board for easier testing
           compositeUnlocked: false,
+          organizationId: assignedOrg.id,
         },
       });
 
-      console.log(`✅ Test user created: ${testUser.username}`);
+      console.log(`✅ Test user created: ${testUser.username} (${assignedOrg.name})`);
     } else {
-      console.log(`✅ Test user already exists: ${testUser.username}`);
+      // Update existing user's organization if not set
+      if (!testUser.organizationId) {
+        testUser = await prisma.user.update({
+          where: { id: testUser.id },
+          data: { organizationId: assignedOrg.id },
+        });
+        console.log(`✅ Test user updated: ${testUser.username} (${assignedOrg.name})`);
+      } else {
+        console.log(`✅ Test user already exists: ${testUser.username}`);
+      }
     }
   }
 
@@ -188,11 +238,22 @@ async function main() {
   const tutorialCount = await prisma.task.count({ where: { isTutorial: true } });
   const testTasksCount = await prisma.task.count({ where: { isTutorial: false } });
   const userCount = await prisma.user.count();
+  const orgCount = await prisma.organization.count();
 
+  console.log(`Total Organizations: ${orgCount}`);
   console.log(`Total Users: ${userCount}`);
   console.log(`Total Tasks: ${totalTasks}`);
   console.log(`Tutorial Tasks: ${tutorialCount}`);
   console.log(`Test Tasks: ${testTasksCount} (3 per type × 5 types)`);
+  console.log('─'.repeat(50));
+
+  // Show organization membership
+  for (const org of createdOrgs) {
+    const memberCount = await prisma.user.count({
+      where: { organizationId: org.id },
+    });
+    console.log(`${org.name}: ${memberCount} members`);
+  }
   console.log('─'.repeat(50));
 
   console.log('\n✨ Database seeding complete!\n');
