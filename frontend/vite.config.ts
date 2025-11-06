@@ -8,5 +8,6 @@ export default defineConfig({
     host: '0.0.0.0', // Expose on local network
     port: 5173,
     strictPort: true,
+    allowedHosts: ['.loca.lt'], // Allow localtunnel domains
   },
 })

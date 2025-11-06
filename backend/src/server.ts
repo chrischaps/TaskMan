@@ -16,7 +16,7 @@ const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
 
 // Middleware
-// CORS configuration for local network testing
+// CORS configuration for local network testing and tunnels
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     // Allow requests with no origin (mobile apps, Postman, etc.)
@@ -31,7 +31,10 @@ const corsOptions = {
     // Allow local network IPs (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
     const localNetworkPattern = /^http:\/\/(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}):5173$/;
 
-    if (allowedOrigins.includes(origin) || localNetworkPattern.test(origin)) {
+    // Allow localtunnel domains (for external access)
+    const localtunnelPattern = /^https:\/\/[\w-]+\.loca\.lt$/;
+
+    if (allowedOrigins.includes(origin) || localNetworkPattern.test(origin) || localtunnelPattern.test(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
