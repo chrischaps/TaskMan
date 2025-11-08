@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { X } from 'lucide-react';
-import apiClient from '../services/apiClient';
-import { useUserStore } from '../stores/userStore';
-import { useUIStore } from '../stores/uiStore';
+import { useState } from "react";
+import { X } from "lucide-react";
+import apiClient from "../services/apiClient";
+import { useUserStore } from "../stores/userStore";
+import { useUIStore } from "../stores/uiStore";
 
 interface CreateTaskModalProps {
   isOpen: boolean;
@@ -10,31 +10,71 @@ interface CreateTaskModalProps {
   onTaskCreated?: () => void;
 }
 
-type TaskType = 'sort_list' | 'color_match' | 'arithmetic' | 'group_separation' | 'defragmentation';
+type TaskType =
+  | "sort_list"
+  | "color_match"
+  | "arithmetic"
+  | "group_separation"
+  | "defragmentation";
+
+interface ArithmeticTaskData {
+  expression: string;
+}
+
+interface ArithmeticSolution {
+  answer: number;
+}
+
+type TaskData = ArithmeticTaskData | Record<string, unknown>;
+type TaskSolution = ArithmeticSolution | Record<string, unknown>;
 
 const TASK_TYPES: { value: TaskType; label: string; description: string }[] = [
-  { value: 'arithmetic', label: 'Arithmetic', description: 'Math calculation tasks' },
-  { value: 'sort_list', label: 'Sort List', description: 'Alphabetical or numerical sorting' },
-  { value: 'color_match', label: 'Color Match', description: 'RGB color matching' },
-  { value: 'group_separation', label: 'Group Items', description: 'Categorize items by attributes' },
-  { value: 'defragmentation', label: 'Defragmentation', description: 'Group colors contiguously' },
+  {
+    value: "arithmetic",
+    label: "Arithmetic",
+    description: "Math calculation tasks",
+  },
+  {
+    value: "sort_list",
+    label: "Sort List",
+    description: "Alphabetical or numerical sorting",
+  },
+  {
+    value: "color_match",
+    label: "Color Match",
+    description: "RGB color matching",
+  },
+  {
+    value: "group_separation",
+    label: "Group Items",
+    description: "Categorize items by attributes",
+  },
+  {
+    value: "defragmentation",
+    label: "Defragmentation",
+    description: "Group colors contiguously",
+  },
 ];
 
-export function CreateTaskModal({ isOpen, onClose, onTaskCreated }: CreateTaskModalProps) {
+export function CreateTaskModal({
+  isOpen,
+  onClose,
+  onTaskCreated,
+}: CreateTaskModalProps) {
   const { user } = useUserStore();
   const { addNotification } = useUIStore();
 
-  const [step, setStep] = useState<'type' | 'details'>('type');
-  const [taskType, setTaskType] = useState<TaskType>('arithmetic');
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [step, setStep] = useState<"type" | "details">("type");
+  const [taskType, setTaskType] = useState<TaskType>("arithmetic");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [tokenReward, setTokenReward] = useState(10);
   const [difficulty, setDifficulty] = useState(1);
   const [estimatedTime, setEstimatedTime] = useState(60);
 
   // Task-specific data
-  const [arithmeticExpression, setArithmeticExpression] = useState('');
-  const [arithmeticAnswer, setArithmeticAnswer] = useState('');
+  const [arithmeticExpression, setArithmeticExpression] = useState("");
+  const [arithmeticAnswer, setArithmeticAnswer] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -45,60 +85,51 @@ export function CreateTaskModal({ isOpen, onClose, onTaskCreated }: CreateTaskMo
   const canAfford = (user?.tokenBalance || 0) >= totalCost;
 
   const handleClose = () => {
-    setStep('type');
-    setTitle('');
-    setDescription('');
+    setStep("type");
+    setTitle("");
+    setDescription("");
     setTokenReward(10);
     setDifficulty(1);
     setEstimatedTime(60);
-    setArithmeticExpression('');
-    setArithmeticAnswer('');
+    setArithmeticExpression("");
+    setArithmeticAnswer("");
     onClose();
   };
 
   const handleTypeSelect = (type: TaskType) => {
     setTaskType(type);
-    setStep('details');
+    setStep("details");
   };
 
   const handleBack = () => {
-    setStep('type');
+    setStep("type");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!canAfford) {
-      addNotification({
-        type: 'error',
-        message: 'Insufficient tokens to create this task',
-        duration: 3000,
-      });
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
-      let taskData: any;
-      let solution: any;
+      let taskData: TaskData;
+      let solution: TaskSolution;
 
       // Build task data based on type
-      if (taskType === 'arithmetic') {
+      if (taskType === "arithmetic") {
         taskData = { expression: arithmeticExpression };
         solution = { answer: parseFloat(arithmeticAnswer) };
       } else {
         // For other types, we'll need specific forms (to be implemented)
         addNotification({
-          type: 'error',
-          message: 'This task type is not yet implemented',
+          type: "error",
+          message: "This task type is not yet implemented",
           duration: 3000,
         });
         setIsSubmitting(false);
         return;
       }
 
-      console.log('Creating task with data:', {
+      console.log("Creating task with data:", {
         type: taskType,
         title,
         description,
@@ -109,7 +140,7 @@ export function CreateTaskModal({ isOpen, onClose, onTaskCreated }: CreateTaskMo
         estimatedTime,
       });
 
-      const response = await apiClient.post('/api/tasks', {
+      const response = await apiClient.post("/api/tasks", {
         type: taskType,
         title,
         description,
@@ -120,10 +151,10 @@ export function CreateTaskModal({ isOpen, onClose, onTaskCreated }: CreateTaskMo
         estimatedTime,
       });
 
-      console.log('Task created successfully:', response.data);
+      console.log("Task created successfully:", response.data);
 
       addNotification({
-        type: 'success',
+        type: "success",
         message: `Task created successfully! Cost: ${totalCost} tokens`,
         duration: 3000,
       });
@@ -140,11 +171,13 @@ export function CreateTaskModal({ isOpen, onClose, onTaskCreated }: CreateTaskMo
 
       handleClose();
       onTaskCreated?.();
-    } catch (error: any) {
-      console.error('Failed to create task:', error);
-      const message = error.response?.data?.message || 'Failed to create task';
+    } catch (error: unknown) {
+      console.error("Failed to create task:", error);
+      const message =
+        (error as { response?: { data?: { message?: string } } }).response?.data
+          ?.message || "Failed to create task";
       addNotification({
-        type: 'error',
+        type: "error",
         message,
         duration: 5000,
       });
@@ -159,7 +192,7 @@ export function CreateTaskModal({ isOpen, onClose, onTaskCreated }: CreateTaskMo
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-2xl font-bold text-gray-900">
-            {step === 'type' ? 'Choose Task Type' : 'Create Task'}
+            {step === "type" ? "Choose Task Type" : "Create Task"}
           </h2>
           <button
             onClick={handleClose}
@@ -171,7 +204,7 @@ export function CreateTaskModal({ isOpen, onClose, onTaskCreated }: CreateTaskMo
 
         {/* Content */}
         <div className="p-6">
-          {step === 'type' ? (
+          {step === "type" ? (
             // Task Type Selection
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {TASK_TYPES.map((type) => (
@@ -231,7 +264,7 @@ export function CreateTaskModal({ isOpen, onClose, onTaskCreated }: CreateTaskMo
               </div>
 
               {/* Task-Specific Fields */}
-              {taskType === 'arithmetic' && (
+              {taskType === "arithmetic" && (
                 <>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -273,7 +306,9 @@ export function CreateTaskModal({ isOpen, onClose, onTaskCreated }: CreateTaskMo
                   <input
                     type="number"
                     value={tokenReward}
-                    onChange={(e) => setTokenReward(parseInt(e.target.value) || 5)}
+                    onChange={(e) =>
+                      setTokenReward(parseInt(e.target.value) || 5)
+                    }
                     min={5}
                     max={1000}
                     required
@@ -288,7 +323,9 @@ export function CreateTaskModal({ isOpen, onClose, onTaskCreated }: CreateTaskMo
                   <input
                     type="number"
                     value={difficulty}
-                    onChange={(e) => setDifficulty(parseInt(e.target.value) || 1)}
+                    onChange={(e) =>
+                      setDifficulty(parseInt(e.target.value) || 1)
+                    }
                     min={1}
                     max={5}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -302,7 +339,9 @@ export function CreateTaskModal({ isOpen, onClose, onTaskCreated }: CreateTaskMo
                   <input
                     type="number"
                     value={estimatedTime}
-                    onChange={(e) => setEstimatedTime(parseInt(e.target.value) || 10)}
+                    onChange={(e) =>
+                      setEstimatedTime(parseInt(e.target.value) || 10)
+                    }
                     min={10}
                     max={3600}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -312,7 +351,9 @@ export function CreateTaskModal({ isOpen, onClose, onTaskCreated }: CreateTaskMo
 
               {/* Cost Breakdown */}
               <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                <h4 className="font-semibold text-gray-900 mb-2">Cost Breakdown</h4>
+                <h4 className="font-semibold text-gray-900 mb-2">
+                  Cost Breakdown
+                </h4>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Task Reward:</span>
                   <span className="font-medium">{tokenReward} tokens</span>
@@ -323,7 +364,9 @@ export function CreateTaskModal({ isOpen, onClose, onTaskCreated }: CreateTaskMo
                 </div>
                 <div className="border-t pt-2 flex justify-between font-bold">
                   <span>Total Cost:</span>
-                  <span className={canAfford ? 'text-green-600' : 'text-red-600'}>
+                  <span
+                    className={canAfford ? "text-green-600" : "text-red-600"}
+                  >
                     {totalCost} tokens
                   </span>
                 </div>
@@ -332,7 +375,8 @@ export function CreateTaskModal({ isOpen, onClose, onTaskCreated }: CreateTaskMo
                 </div>
                 {!canAfford && (
                   <p className="text-sm text-red-600 font-medium">
-                    Insufficient tokens! You need {totalCost - (user?.tokenBalance || 0)} more tokens.
+                    Insufficient tokens! You need{" "}
+                    {totalCost - (user?.tokenBalance || 0)} more tokens.
                   </p>
                 )}
               </div>
@@ -351,7 +395,7 @@ export function CreateTaskModal({ isOpen, onClose, onTaskCreated }: CreateTaskMo
                   disabled={isSubmitting || !canAfford}
                   className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                 >
-                  {isSubmitting ? 'Creating...' : 'Create Task'}
+                  {isSubmitting ? "Creating..." : "Create Task"}
                 </button>
               </div>
             </form>

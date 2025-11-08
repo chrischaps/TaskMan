@@ -29,6 +29,41 @@ model Organization {
 }
 
 // ============================================================================
+// Initiative Model
+// ============================================================================
+model Initiative {
+  id          String @id @default(uuid()) @db.Uuid
+  title       String @db.VarChar(255)
+  description String? @db.Text
+
+  // Creator and project relations
+  creatorId String @map("creator_id") @db.Uuid
+  creator   User   @relation("InitiativeCreator", fields: [creatorId], references: [id])
+
+  projectId String?  @map("project_id") @db.Uuid
+  project   Project? @relation(fields: [projectId], references: [id])
+
+  // Token mechanics (TBD - placeholders for future)
+  tokenReward Int @default(0) @map("token_reward")
+
+  // Status
+  status String @default("active") @db.VarChar(20) // "active", "completed", "archived"
+
+  // Timestamps
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  completedAt DateTime? @map("completed_at")
+
+  // Relations
+  tasks Task[]
+
+  @@index([creatorId])
+  @@index([projectId])
+  @@index([status])
+  @@map("initiatives")
+}
+
+// ============================================================================
 // Project Model
 // ============================================================================
 model Project {
@@ -54,7 +89,8 @@ model Project {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  tasks Task[]
+  tasks       Task[]
+  initiatives Initiative[]
 
   @@index([status])
   @@index([scheduledStartTime])
@@ -89,10 +125,11 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  createdTasks  Task[]             @relation("TaskCreator")
-  acceptedTasks Task[]             @relation("TaskAcceptor")
-  transactions  TokenTransaction[]
-  submissions   TaskSubmission[]
+  createdTasks       Task[]             @relation("TaskCreator")
+  acceptedTasks      Task[]             @relation("TaskAcceptor")
+  createdInitiatives Initiative[]       @relation("InitiativeCreator")
+  transactions       TokenTransaction[]
+  submissions        TaskSubmission[]
 
   @@index([organizationId])
   @@map("users")
@@ -133,6 +170,9 @@ model Task {
   projectId String?  @map("project_id") @db.Uuid
   project   Project? @relation(fields: [projectId], references: [id])
 
+  initiativeId String?     @map("initiative_id") @db.Uuid
+  initiative   Initiative? @relation(fields: [initiativeId], references: [id])
+
   // Relations
   creatorId String @map("creator_id") @db.Uuid
   creator   User   @relation("TaskCreator", fields: [creatorId], references: [id])
@@ -159,6 +199,7 @@ model Task {
   @@index([createdAt])
   @@index([organizationId])
   @@index([projectId])
+  @@index([initiativeId])
   @@map("tasks")
 }
 

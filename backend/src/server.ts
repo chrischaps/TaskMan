@@ -6,6 +6,7 @@ import authRoutes from './routes/auth';
 import taskRoutes from './routes/tasks';
 import organizationRoutes from './routes/organizations';
 import projectRoutes from './routes/projects';
+import initiativeRoutes from './routes/initiatives';
 import adminRoutes from './routes/admin';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { TaskExpirationService } from './services/taskExpirationService';
@@ -52,6 +53,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/initiatives', initiativeRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Health check / Hello World endpoint

@@ -148,6 +148,217 @@ This is a **prototype** focused on validating core gameplay mechanics and the to
 
 ## Recent Development Sessions
 
+### Session 5 - Task Board UI Redesign & Initiative System
+**Date:** November 7, 2025
+**Branch:** `feature/task-board-redesign`
+**Duration:** ~6 hours
+
+**Major Changes:**
+This session implemented a complete redesign of the task board UI from a simple card grid to a professional JIRA-style backlog interface with user-created Initiatives for task organization.
+
+**Backend - Initiative System:**
+1. **Database Schema:**
+   - Added `Initiative` model with fields: id, title, description, creatorId, projectId, tokenReward, status
+   - Added `initiativeId` foreign key to Task model
+   - Created migration: `20251108033754_add_initiatives`
+   - Added indexes for performance (creator_id, project_id, status, initiative_id)
+
+2. **Initiative API** (`backend/src/routes/initiatives.ts`):
+   - `POST /api/initiatives` - Create initiative
+   - `GET /api/initiatives` - List initiatives with filters (projectId, status, creatorId, includeTasks)
+   - `GET /api/initiatives/:id` - Get initiative details + tasks
+   - `PATCH /api/initiatives/:id` - Update initiative (creator only)
+   - `DELETE /api/initiatives/:id` - Delete initiative (creator only, no tasks)
+
+3. **Initiative Service** (`backend/src/services/initiativeService.ts`):
+   - Full CRUD operations with validation
+   - Task count and total reward calculations
+   - Authorization checks (only creator can edit/delete)
+   - Placeholder functions for future token reward mechanics
+
+4. **Tasks API Updates:**
+   - Modified `GET /api/tasks` to include initiative data (id, title)
+   - Added fields: initiativeId, expiresAt, acceptedById for status calculations
+
+**Frontend - New UI Components:**
+1. **Type Definitions:**
+   - `Initiative` interface (`frontend/src/types/initiative.ts`)
+   - Updated `Task` interface with initiative fields
+   - `TaskStatusLabel` type: 'available' | 'claimed' | 'expiring_soon' | 'completed'
+   - Status calculation utility (`frontend/src/utils/taskStatus.ts`)
+
+2. **TutorialTaskList Component** (`frontend/src/pages/TutorialTaskList.tsx`):
+   - Ultra-simple list view for new users
+   - Linear progress tracking (1 of 5, 2 of 5, etc.)
+   - Progress bar with encouraging messages
+   - Larger cards with friendly UI
+   - Auto-redirect to backlog when tutorial complete
+   - No filters/sorting (fixed tutorial sequence)
+
+3. **TaskBoardBacklog Component** (`frontend/src/pages/TaskBoardBacklog.tsx`):
+   - Professional JIRA Sprint-style backlog view
+   - Groups tasks by user-created initiatives
+   - Separate "Ungrouped Tasks" section
+   - **Advanced Sorting**: 8 options (newest, oldest, highest reward, lowest reward, hardest, easiest, longest, shortest)
+   - **Filters**: type, difficulty, min/max tokens, hide own tasks
+   - Collapsible sections with localStorage persistence
+   - 30-second auto-polling + manual refresh
+   - "Create Initiative" button
+
+4. **TaskRow Component** (`frontend/src/components/TaskRow.tsx`):
+   - Compact horizontal layout for task display
+   - Columns: Type Icon | Title | Status Badge | Difficulty | Reward | Creator | Time | Accept
+   - Click title to expand/collapse description
+   - Responsive design (hides creator/time on mobile/tablet)
+   - Status badges with color coding
+
+5. **InitiativeGroup Component** (`frontend/src/components/InitiativeGroup.tsx`):
+   - Collapsible section header for each initiative
+   - Shows: initiative title, description (tooltip), task count, total rewards
+   - Edit/delete icons (only for creator)
+   - Contains list of TaskRow components
+   - Supports "Ungrouped Tasks" section (undefined initiative)
+
+6. **CreateInitiativeModal Component** (`frontend/src/components/CreateInitiativeModal.tsx`):
+   - Form with title (required) and description (optional)
+   - Character count indicators (255/5000)
+   - Validation with error messages
+   - Loading state during creation
+   - Token reward mechanics placeholder
+
+7. **Initiative API Service** (`frontend/src/services/initiativeService.ts`):
+   - `createInitiative`, `getInitiatives`, `getInitiativeById`
+   - `updateInitiative`, `deleteInitiative`
+   - Proper TypeScript typing for all requests/responses
+
+**Routing Updates:**
+- `/tasks` - Smart router (tutorial if not completed, else backlog)
+- `/tasks/tutorial` - Explicit tutorial view
+- `/tasks/backlog` - Explicit backlog view
+- `/tasks/grid` - Old card grid view (legacy/fallback)
+- Router checks `user.tutorialCompleted` flag to determine view
+
+**Design Philosophy:**
+1. **Tutorial View**: Simple, friendly, encouraging - reduces overwhelm for new users
+2. **Backlog View**: Professional, feature-rich - feels like a real project management tool
+3. **Initiatives**: User-created organizational layer between Project and Task
+4. **Future-Ready**: Token reward mechanics for initiative creators (placeholders in place)
+
+**Status Labels System:**
+- **Available**: Green - task ready to accept
+- **Claimed**: Blue - task accepted, in progress
+- **Expiring Soon**: Orange - task expires within 1 hour
+- **Completed**: Gray - task finished
+
+**Files Created:**
+- `backend/src/services/initiativeService.ts`
+- `backend/src/routes/initiatives.ts`
+- `frontend/src/types/initiative.ts`
+- `frontend/src/utils/taskStatus.ts`
+- `frontend/src/services/initiativeService.ts`
+- `frontend/src/pages/TutorialTaskList.tsx`
+- `frontend/src/pages/TaskBoardBacklog.tsx`
+- `frontend/src/components/TaskRow.tsx`
+- `frontend/src/components/InitiativeGroup.tsx`
+- `frontend/src/components/CreateInitiativeModal.tsx`
+- `TASK_BOARD_REDESIGN_PLAN.md` (17,000+ word comprehensive plan)
+
+**Files Modified:**
+- `backend/prisma/schema.prisma` - Added Initiative model
+- `backend/src/server.ts` - Registered initiative routes
+- `backend/src/routes/tasks.ts` - Added initiative data to response
+- `frontend/src/types/task.ts` - Added initiative fields + status label
+- `frontend/src/main.tsx` - Updated routing with smart router
+
+**Errors Encountered & Learnings:**
+
+**Error 1: TypeScript Compilation Errors in Backend** (`backend/src/routes/initiatives.ts`)
+- **Symptom**: `error TS7006: Parameter 'req' implicitly has an 'any' type.` and `Property 'id' does not exist on type 'JwtPayload'`
+- **Root Cause**: Missing explicit type annotations, incorrect property name (`req.user!.id` instead of `req.user!.userId`)
+- **Fix**: Added `Request, Response` types, corrected property names, added explicit return types
+- **Lesson**: Always provide explicit types for Express route handlers: `async (req: Request, res: Response): Promise<void> =>`
+
+**Error 2: Prisma Client Not Updated**
+- **Symptom**: `error TS2353: Object literal may only specify known properties, and 'initiativeId' does not exist`
+- **Root Cause**: Prisma client not regenerated after schema changes
+- **Fix**: Run `npx prisma generate` after any schema modifications
+- **Lesson**: Always regenerate Prisma client after schema changes, even if migrations succeed
+
+**Error 3: CORS Configuration**
+- **Symptom**: CORS errors when accessing frontend from localhost:5173
+- **Root Cause**: Frontend `.env` pointed to localtunnel URL instead of localhost
+- **Fix**: Changed `VITE_API_URL` from localtunnel to `http://localhost:3001`
+- **Lesson**: Keep separate environment configurations for local development vs external access
+
+**Error 4: Module Export Error (Critical Learning)**
+- **Symptom**: `Uncaught SyntaxError: The requested module '/src/types/task.ts' does not provide an export named 'Task'`
+- **Root Causes** (Multiple issues in `frontend/src/types/task.ts`):
+  1. ❌ **`export type {}` at top of file** - This empty export declaration breaks all subsequent named exports
+  2. ❌ **Missing semicolons** - Inconsistent formatting throughout file
+  3. ❌ **Wrong type definition order** - Data types (SortListData, etc.) defined AFTER Task interface that uses them
+  4. ❌ **Using `any` type** - `task.data: any` instead of proper union type
+  5. ❌ **Wrong import pattern** - Components using `import { Task }` instead of `import type { Task }`
+
+- **Fixes Applied**:
+  1. ✅ **Removed `export type {}`** - This line serves no purpose and breaks exports
+  2. ✅ **Added semicolons** - All type definitions now end with `;`
+  3. ✅ **Reordered definitions** - Moved SortListData, GroupSeparationData, DefragData, ArithmeticData BEFORE Task interface
+  4. ✅ **Proper union type** - Changed to `data: SortListData | GroupSeparationData | DefragData | ArithmeticData | Record<string, unknown>`
+  5. ✅ **Used `import type`** - Changed all type imports to `import type { Task } from "../types/task";`
+  6. ✅ **Applied Prettier** - Formatted all frontend files consistently
+
+- **How to Detect These Errors**:
+  - **Look for "does not provide an export" errors** - Usually indicates `export type {}` or circular dependency
+  - **Check TypeScript compilation output** - Run `npm run build` or `tsc --noEmit` to catch issues early
+  - **Review file structure** - Types should be defined in dependency order (dependencies first, consumers later)
+  - **Validate imports** - Use `import type` for type-only imports (better tree-shaking, clearer intent)
+  - **Run linter** - ESLint/Prettier will catch formatting inconsistencies
+
+- **Prevention Checklist**:
+  ```typescript
+  // ✅ Good type file structure:
+  // 1. No empty export type {} declarations
+  // 2. Import statements first
+  // 3. Base types/interfaces defined first
+  // 4. Complex types that depend on base types second
+  // 5. All definitions end with semicolons
+  // 6. Consistent formatting (run Prettier)
+
+  // Example:
+  export type StatusLabel = 'available' | 'claimed'; // Base type first
+
+  export interface BaseData {                        // Base interface
+    id: string;
+  }
+
+  export interface Task {                            // Complex type using base types
+    status: StatusLabel;
+    data: BaseData | OtherData;                      // Union type, not 'any'
+  }
+  ```
+
+- **When Importing Types**:
+  ```typescript
+  // ✅ Good: Type-only import
+  import type { Task, Initiative } from "../types/task";
+
+  // ❌ Bad: Mixed import (less clear, worse tree-shaking)
+  import { Task, Initiative } from "../types/task";
+  ```
+
+**Next Steps (Future Work):**
+- Initiative token reward mechanics (detailed design + implementation)
+- Edit/delete initiative modals (currently placeholders)
+- Assign tasks to initiatives in task creation flow
+- Drag-and-drop task reordering
+- Saved filter presets
+- Search functionality
+- Kanban board view toggle
+
+**Documentation:**
+- Complete redesign plan saved in `TASK_BOARD_REDESIGN_PLAN.md`
+- Includes mockups, implementation phases, technical decisions, and future enhancements
+
 ### Session 4 - Task Type UIs Implementation
 **Date:** November 5, 2025
 **Tasks Completed:** FE-009, FE-010, FE-011, FE-012, FE-013

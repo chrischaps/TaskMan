@@ -1,52 +1,69 @@
-import { useState } from 'react'
-import type { Task } from '../../types/task'
+import { useState } from "react";
+import type { Task, ArithmeticData } from "../../types/task";
+
+interface ArithmeticSolution {
+  answer: number;
+}
 
 interface ArithmeticTaskProps {
-  task: Task
-  onSubmit: (solution: any) => void
-  isSubmitting: boolean
+  task: Task;
+  onSubmit: (solution: ArithmeticSolution) => void;
+  isSubmitting: boolean;
 }
 
-interface ArithmeticData {
-  expression: string
-  correctAnswer: number
+// Legacy format interface for backward compatibility
+interface LegacyArithmeticData {
+  operation?: "add" | "subtract" | "multiply";
+  operands?: number[];
 }
 
-export default function ArithmeticTask({ task, onSubmit, isSubmitting }: ArithmeticTaskProps) {
-  const data = task.data as ArithmeticData
+export default function ArithmeticTask({
+  task,
+  onSubmit,
+  isSubmitting,
+}: ArithmeticTaskProps) {
+  // Type guard to check if data is ArithmeticData
+  const isArithmeticData = (data: unknown): data is ArithmeticData => {
+    return typeof data === "object" && data !== null && "expression" in data;
+  };
+
+  const data = isArithmeticData(task.data) ? task.data : null;
 
   // Handle legacy format (operation + operands) - convert to expression
-  const expression = data.expression || (() => {
-    const legacyData = task.data as any
-    if (legacyData.operation && legacyData.operands) {
-      const [a, b] = legacyData.operands
-      if (legacyData.operation === 'add') return `${a} + ${b}`
-      if (legacyData.operation === 'subtract') return `${a} - ${b}`
-      if (legacyData.operation === 'multiply') return `${a} * ${b}`
-    }
-    return 'Invalid expression'
-  })()
+  const expression =
+    data?.expression ||
+    (() => {
+      const legacyData = task.data as LegacyArithmeticData;
+      if (legacyData.operation && legacyData.operands) {
+        const [a, b] = legacyData.operands;
+        if (legacyData.operation === "add") return `${a} + ${b}`;
+        if (legacyData.operation === "subtract") return `${a} - ${b}`;
+        if (legacyData.operation === "multiply") return `${a} * ${b}`;
+      }
+      return "Invalid expression";
+    })();
 
-  const [answer, setAnswer] = useState<string>('')
+  const [answer, setAnswer] = useState<string>("");
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const numericAnswer = parseFloat(answer)
+    e.preventDefault();
+    const numericAnswer = parseFloat(answer);
 
     if (isNaN(numericAnswer)) {
-      return // Don't submit if not a valid number
+      return; // Don't submit if not a valid number
     }
 
     onSubmit({
       answer: numericAnswer,
-    })
-  }
+    });
+  };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSubmit(e as any)
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit(e as unknown as React.FormEvent);
     }
-  }
+  };
 
   return (
     <div className="p-8">
@@ -66,7 +83,9 @@ export default function ArithmeticTask({ task, onSubmit, isSubmitting }: Arithme
         {/* Answer Input */}
         <form onSubmit={handleSubmit} className="mb-8">
           <label className="block mb-3">
-            <span className="text-lg font-semibold text-gray-900 mb-2 block">Your Answer</span>
+            <span className="text-lg font-semibold text-gray-900 mb-2 block">
+              Your Answer
+            </span>
             <input
               type="number"
               step="any"
@@ -91,7 +110,7 @@ export default function ArithmeticTask({ task, onSubmit, isSubmitting }: Arithme
             disabled={isSubmitting || !answer}
             className="w-full py-4 px-6 bg-blue-600 text-white font-semibold text-lg rounded-xl hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors shadow-lg hover:shadow-xl"
           >
-            {isSubmitting ? 'Submitting...' : 'Submit Answer'}
+            {isSubmitting ? "Submitting..." : "Submit Answer"}
           </button>
         </form>
 
@@ -109,5 +128,5 @@ export default function ArithmeticTask({ task, onSubmit, isSubmitting }: Arithme
         </div>
       </div>
     </div>
-  )
+  );
 }

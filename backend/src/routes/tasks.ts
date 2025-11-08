@@ -280,11 +280,20 @@ router.get(
           isTutorial: true,
           createdAt: true,
           creatorId: true,
+          initiativeId: true,
+          expiresAt: true,
+          acceptedById: true,
           creator: {
             select: {
               id: true,
               username: true,
               level: true,
+            },
+          },
+          initiative: {
+            select: {
+              id: true,
+              title: true,
             },
           },
         },

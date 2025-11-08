@@ -10,6 +10,8 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
 import TaskBoard from './pages/TaskBoard'
+import TutorialTaskList from './pages/TutorialTaskList'
+import TaskBoardBacklog from './pages/TaskBoardBacklog'
 import TaskExecution from './pages/TaskExecution'
 import TestTasks from './pages/TestTasks'
 import Notifications from './components/Notifications'
@@ -41,6 +43,19 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useUserStore()
   return !isAuthenticated ? <>{children}</> : <Navigate to="/dashboard" replace />
+}
+
+// Smart task board router (tutorial or backlog based on user progress)
+function TaskBoardRouter() {
+  const { user } = useUserStore()
+
+  // If tutorial is not completed, show tutorial
+  if (user && !user.tutorialCompleted) {
+    return <TutorialTaskList />
+  }
+
+  // Otherwise show the backlog view
+  return <TaskBoardBacklog />
 }
 
 createRoot(document.getElementById('root')!).render(
@@ -86,6 +101,30 @@ createRoot(document.getElementById('root')!).render(
         />
         <Route
           path="/tasks"
+          element={
+            <ProtectedRoute>
+              <TaskBoardRouter />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tasks/tutorial"
+          element={
+            <ProtectedRoute>
+              <TutorialTaskList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tasks/backlog"
+          element={
+            <ProtectedRoute>
+              <TaskBoardBacklog />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tasks/grid"
           element={
             <ProtectedRoute>
               <TaskBoard />

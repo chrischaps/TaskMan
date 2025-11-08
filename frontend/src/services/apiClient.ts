@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { useUserStore } from '../stores/userStore'
 
 // Create axios instance with base configuration
@@ -12,7 +12,7 @@ const apiClient = axios.create({
 
 // Request interceptor - Add JWT token to all requests
 apiClient.interceptors.request.use(
-  (config: any) => {
+  (config: InternalAxiosRequestConfig) => {
     const token = useUserStore.getState().token
 
     if (token && config.headers) {
@@ -21,7 +21,7 @@ apiClient.interceptors.request.use(
 
     return config
   },
-  (error: any) => {
+  (error: AxiosError) => {
     return Promise.reject(error)
   }
 )
@@ -31,7 +31,7 @@ apiClient.interceptors.response.use(
   (response) => {
     return response
   },
-  (error: any) => {
+  (error: AxiosError) => {
     if (error.response?.status === 401) {
       // Clear user data and redirect to login
       useUserStore.getState().clearUser()
@@ -66,6 +66,7 @@ export interface LoginResponse {
     tutorialCompleted: boolean
     taskBoardUnlocked: boolean
     compositeUnlocked: boolean
+    isAdmin: boolean
     createdAt: string
   }
 }
@@ -81,6 +82,7 @@ export interface RegisterResponse {
     tutorialCompleted: boolean
     taskBoardUnlocked: boolean
     compositeUnlocked: boolean
+    isAdmin: boolean
     createdAt: string
   }
 }
@@ -94,6 +96,7 @@ export interface UserResponse {
   tutorialCompleted: boolean
   taskBoardUnlocked: boolean
   compositeUnlocked: boolean
+  isAdmin: boolean
   createdAt: string
 }
 
