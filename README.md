@@ -2,6 +2,8 @@
 
 A web-based multiplayer task completion game where players complete micro-tasks (sorting, color matching, arithmetic, etc.) to earn tokens, which they can use to offer tasks to other players.
 
+**Project page:** [chaps.dev/projects/taskman](https://chaps.dev/projects/taskman/), with a screenshot of the game.
+
 ## Project Status
 
 **Phase 1: Foundation** - In Progress (53% Complete)
